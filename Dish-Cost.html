@@ -1,0 +1,829 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0}</style></head><body><title>Dish Cost</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap">
+<style>
+:root{
+  --bg:#F3F5F2; --surface:#FFFFFF; --sunk:#EAEEEA; --ink:#17201C; --muted:#5B6862; --line:#D8DFDA;
+  --accent:#22574A; --accent-ink:#FFFFFF; --soft:#E1EBE6; --saffron:#B97A12;
+  --good:#2C7A4B; --good-bg:#DDEFE3; --warn:#9A6410; --warn-bg:#F6E8CC; --bad:#A93328; --bad-bg:#F6DEDA;
+  --sz0:#F1ECFA; --sz1:#E7F0FA; --sz2:#FFF0C4; --sz3:#FFDCD3;
+  --sz0-ink:#6B4FB8; --sz1-ink:#2F6EB3; --sz2-ink:#9A6700; --sz3-ink:#C0422A;
+  --display:"Fraunces",Georgia,"Times New Roman",serif;
+  --body:"IBM Plex Sans",system-ui,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#101613; --surface:#18201C; --sunk:#131A17; --ink:#E5ECE8; --muted:#98A69F; --line:#2B3631;
+    --accent:#72B6A0; --accent-ink:#0D1411; --soft:#1F2D28; --saffron:#E2AE52;
+    --good:#6CC592; --good-bg:#1B3226; --warn:#E6B25A; --warn-bg:#382B14; --bad:#EE8A7E; --bad-bg:#3C1F1B;
+    --sz0:#272238; --sz1:#1C2836; --sz2:#3A2E0E; --sz3:#3A1D17;
+    --sz0-ink:#B7A3F0; --sz1-ink:#8DBBEB; --sz2-ink:#F2C555; --sz3-ink:#F28B72;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#101613; --surface:#18201C; --sunk:#131A17; --ink:#E5ECE8; --muted:#98A69F; --line:#2B3631;
+  --accent:#72B6A0; --accent-ink:#0D1411; --soft:#1F2D28; --saffron:#E2AE52;
+  --good:#6CC592; --good-bg:#1B3226; --warn:#E6B25A; --warn-bg:#382B14; --bad:#EE8A7E; --bad-bg:#3C1F1B;
+  --sz0:#272238; --sz1:#1C2836; --sz2:#3A2E0E; --sz3:#3A1D17;
+  --sz0-ink:#B7A3F0; --sz1-ink:#8DBBEB; --sz2-ink:#F2C555; --sz3-ink:#F28B72;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55}
+.app{max-width:1240px;margin:0 auto;padding-inline:20px;padding-block:22px 48px;display:flex;flex-direction:column;gap:18px}
+.num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+h1,h2,h3{margin:0;text-wrap:balance}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.top h1{font-family:var(--display);font-weight:700;font-size:30px;line-height:1.2}
+.top .sub{color:var(--muted);font-size:13px;margin-top:2px}
+.tabs{display:flex;gap:4px;background:var(--sunk);padding:4px;border-radius:10px;border:1px solid var(--line);flex-wrap:wrap}
+.tab{border:0;background:transparent;padding:8px 16px;border-radius:7px;font-weight:600;color:var(--muted)}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.banner{font-size:13px;padding:9px 14px;border-radius:8px;background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+.banner.warn{background:var(--warn-bg);color:var(--warn);border-color:transparent}
+.view{display:flex;flex-direction:column;gap:16px}
+.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
+.stat .k{font-size:12px;color:var(--muted)}
+.stat .v{font-family:var(--display);font-size:26px;font-weight:700;line-height:1.2}
+.stat .v small{font-family:var(--body);font-size:13px;font-weight:500;color:var(--muted)}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface);padding:6px 14px;border-radius:999px;font-size:13px;font-weight:500}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn{border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);padding:8px 16px;border-radius:8px;font-weight:600;font-size:14px}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn.link{border:0;background:none;color:var(--muted);padding:6px 8px;font-weight:500}
+.btn.sm{padding:4px 10px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.work{display:grid;grid-template-columns:minmax(240px,300px) minmax(0,1fr);gap:16px;align-items:start}
+.list{display:flex;flex-direction:column;gap:6px}
+.dish .pills .hint{min-width:38px;font-size:11px}
+.dish-head{display:flex;align-items:center;gap:10px}
+.thumb{width:40px;height:40px;border-radius:8px;object-fit:cover;flex:none;background:var(--sunk)}
+.photo{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+.photo img,.photo .ph{width:220px;max-width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;border:1px solid var(--line);background:var(--sunk)}
+.photo .ph{display:grid;place-items:center;color:var(--muted);font-size:13px;border-style:dashed}
+.photo-actions{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.dish{display:flex;flex-direction:column;gap:4px;text-align:start;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.dish:hover{border-color:var(--muted)}
+.dish.is-sel{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+.dish-name{font-weight:600}
+.dish-brand{font-size:11px;color:var(--muted);letter-spacing:.04em}
+.pills{display:flex;flex-wrap:wrap;gap:4px}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:999px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill.good{background:var(--good-bg);color:var(--good)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.bad{background:var(--bad-bg);color:var(--bad)}
+.pill.none{background:var(--sunk);color:var(--muted)}
+.empty{color:var(--muted);font-size:14px;padding:18px;border:1px dashed var(--line);border-radius:10px;text-align:center}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.name-in{font-family:var(--display);font-size:24px;font-weight:700;border:0;border-bottom:1px dashed var(--line);background:transparent;padding:2px 0;width:100%}
+.name-in:focus{outline:none;border-bottom-color:var(--accent)}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label,.lbl{font-size:12px;color:var(--muted);font-weight:500}
+.in{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:7px;padding:7px 10px;min-width:0}
+.in:focus{outline:none;border-color:var(--accent);background:var(--surface)}
+input.in[type="number"]{font-variant-numeric:tabular-nums;text-align:end}
+.hint{font-size:12px;color:var(--muted)}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font-size:12px;font-weight:600;color:var(--muted);text-align:start;padding:8px 10px;background:var(--sunk);border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:5px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+td.c,th.c{text-align:end;white-space:nowrap}
+td .in{padding:5px 8px}
+tr.cat td{background:var(--soft);font-weight:600;font-size:12.5px;color:var(--accent);letter-spacing:.02em;padding:6px 10px}
+tfoot td{font-weight:700;background:var(--sunk);border-top:1px solid var(--line)}
+.sn{color:var(--muted);font-size:12px;width:28px}
+.x{border:0;background:none;color:var(--muted);font-size:18px;line-height:1;padding:4px 8px;border-radius:6px}
+.x:hover{color:var(--bad);background:var(--bad-bg)}
+.goto{border:0;background:none;padding:2px 4px;border-radius:4px;color:var(--ink);text-decoration:underline dotted var(--muted);text-underline-offset:3px}
+.goto:hover{background:var(--soft)}
+.row-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.confirm{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px;color:var(--bad)}
+.unit{color:var(--muted);font-size:12.5px;white-space:nowrap}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.sec-h h2{font-family:var(--display);font-size:19px;font-weight:700}
+.sec-h h3{font-size:15px}
+.note{font-size:13px;color:var(--muted);max-width:75ch;margin:0}
+.sizes th.c,.sizes td.c{min-width:118px}
+.sizes td.rl{color:var(--muted);font-size:13px;white-space:nowrap}
+.sizes tr.strong td{font-weight:700;background:var(--sunk)}
+.sizes .in{text-align:end}
+.sizes select.in{text-align:start}
+.up{color:var(--bad)} .down{color:var(--good)}
+.search{max-width:280px}
+#priceTable .in{min-width:74px}
+#priceTable td.nm .in{min-width:170px}
+#priceTable select.in{min-width:92px}
+tr.flash td{animation:flash 1.2s ease}
+@keyframes flash{from{background:var(--warn-bg)}to{background:transparent}}
+.sumtbl td,.sumtbl th{white-space:nowrap}
+.sumtbl .sep{border-inline-start:1px solid var(--line)}
+td.sz0,th.sz0{background:var(--sz0)} td.sz1,th.sz1{background:var(--sz1)} td.sz2,th.sz2{background:var(--sz2)} td.sz3,th.sz3{background:var(--sz3)}
+th.szh{font-size:13px;font-weight:700;border-top:3px solid}
+th.szh.sz0{color:var(--sz0-ink);border-top-color:var(--sz0-ink)} th.szh.sz1{color:var(--sz1-ink);border-top-color:var(--sz1-ink)} th.szh.sz2{color:var(--sz2-ink);border-top-color:var(--sz2-ink)} th.szh.sz3{color:var(--sz3-ink);border-top-color:var(--sz3-ink)}
+.sizes .strong td.sz{font-weight:700}
+.szp{box-shadow:inset 3px 0 0 var(--szc)} .szp.sz0{--szc:var(--sz0-ink)} .szp.sz1{--szc:var(--sz1-ink)} .szp.sz2{--szc:var(--sz2-ink)} .szp.sz3{--szc:var(--sz3-ink)}
+.sumtbl tbody tr:hover td{filter:brightness(.97)}
+.sumtbl tbody tr{cursor:pointer}
+.sumtbl tbody tr:hover td:first-child{background:var(--soft)}
+.io-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;align-items:start}
+.io-actions{display:flex;flex-wrap:wrap;gap:10px}
+.chk{display:flex;gap:8px;align-items:flex-start;font-size:13.5px}
+.toast{position:fixed;inset-inline:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));margin:0 auto;max-width:440px;background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:8px;font-size:13.5px;text-align:center;z-index:5}
+@media (max-width:900px){ .work{grid-template-columns:1fr} .summary{grid-template-columns:1fr 1fr} }
+@media (max-width:520px){ .app{padding-inline:16px} .top h1{font-size:25px} .fields{grid-template-columns:1fr 1fr} .fields .field:first-child{grid-column:1 / -1} }
+@media (prefers-reduced-motion:reduce){ tr.flash td{animation:none} }
+</style>
+
+<div class="app" dir="ltr" lang="en" id="app">
+  <header class="top">
+    <div>
+      <h1>Dish Cost</h1>
+      <div class="sub">FAREEQ BIN AQOOL · JUST BUNS — prices in Bahraini dinar</div>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-tab="sum">Summary</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="dishes">Dishes</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="prices">Price list</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="io">Upload & download</button>
+    </div>
+  </header>
+
+  <div class="banner" id="banner">Loading data…</div>
+
+  <div class="toolbar" id="brandBar">
+    <div class="chips" id="brandChips"></div>
+  </div>
+
+  <section class="view" id="view-sum">
+    <div class="summary" id="stats"></div>
+    <div class="tbl-wrap"><table class="sumtbl" id="sumTable"></table></div>
+    <p class="note">Cost % = (ingredient cost per container + packaging) ÷ selling price, calculated once for the store price and once for the delivery price (Talabat, Jahez, Ahlan). Green is within target, orange is up to 5 points above, red is higher. Click any dish to open it.</p>
+  </section>
+
+  <section class="view" id="view-dishes" hidden>
+    <div class="toolbar"><span class="hint" id="dishCount"></span><button class="btn" id="newDish">+ New dish</button></div>
+    <div class="work">
+      <div class="list" id="dishList"></div>
+      <div class="panel" id="detail"></div>
+      <input type="file" id="photoFile" accept="image/*" hidden>
+    </div>
+  </section>
+
+  <section class="view" id="view-prices" hidden>
+    <div class="sec-h">
+      <h2>Price list</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input class="in search" id="priceQ" type="search" placeholder="Search items…" aria-label="Search the price list">
+        <button class="btn" id="newIng">+ New item</button>
+      </div>
+    </div>
+    <p class="note">This list is the only source of prices. Every dish takes its unit price from here (price ÷ quantity), and any price change updates the cost of every dish that uses the item immediately.</p>
+    <div class="tbl-wrap">
+      <table id="priceTable">
+        <thead><tr>
+          <th>#</th><th>Item</th><th>Category</th><th class="c">Price (BHD)</th><th class="c">Qty</th><th>Unit</th><th class="c">Unit price</th><th class="c">Previous price</th><th class="c">Change</th><th class="c">Market price</th><th>Used in</th><th></th>
+        </tr></thead>
+        <tbody id="priceBody"></tbody>
+      </table>
+    </div>
+  </section>
+  <section class="view" id="view-io" hidden>
+    <div class="io-grid">
+      <div class="panel">
+        <div class="sec-h"><h2>Download</h2></div>
+        <p class="note">Excel files with the current prices and costs. The price file follows the LIST sheet layout; the recipe file has a cost summary and one sheet per dish.</p>
+        <div class="io-actions">
+          <button class="btn" id="expPrices">Download price list</button>
+          <button class="btn" id="expRecipes">Download recipes & costs</button>
+        </div>
+        <p class="hint" id="expNote" hidden>Downloads are not available in this view.</p>
+      </div>
+      <div class="panel">
+        <div class="sec-h"><h2>Upload a file</h2></div>
+        <div class="fields">
+          <div class="field"><label for="impKind">File type</label><select class="in" id="impKind"><option value="prices">Price list</option><option value="recipes">Recipes</option></select></div>
+          <div class="field" id="impCatWrap" hidden><label for="impCat">Section for new dishes</label><select class="in" id="impCat"></select></div>
+        </div>
+        <label class="chk" id="impDeliveryWrap" hidden><input type="checkbox" id="impDelivery"> Delivery price file (T files): updates the delivery price only and leaves the recipe unchanged</label>
+        <div class="field"><label for="impFile">Excel file</label><input class="in" type="file" id="impFile" accept=".xlsx,.xls,.xlsm"></div>
+        <p class="note">Accepts a price file in the LIST sheet layout, recipe files in your dish-sheet layout (one sheet per dish), or the recipe file downloaded from here after editing. You will see a preview before anything is saved.</p>
+      </div>
+    </div>
+    <div id="impPreview" class="view"></div>
+  </section>
+  <div class="toast" id="toast" hidden></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+(function(){
+const BRANDS=['FAREEQ BIN AQOOL','JUST BUNS'];
+const CATS=[['vegetable','Vegetables'],['beans','Beans & grains'],['masala','Spices'],['frozen','Frozen & meat'],['grocery','Grocery'],['packaging','Packaging & extras']];
+const CATN=Object.fromEntries(CATS);
+const RCATS=[['egg','Eggs & fool'],['traditional','Traditional'],['main','Main dishes'],['sweet','Sweets']];
+const SIZE_ORDER=['Single','Small','Medium','Large'];
+const SIZE_AR={'فردي':'Single','صغير':'Small','وسط':'Medium','كبير':'Large','حجم جديد':'New size'};
+const szc=(nm,j)=>{const i=SIZE_ORDER.indexOf(SIZE_AR[nm]||nm);return 'sz sz'+(i>=0?i:(j||0)%4)};
+const UNITS={Gram:'g',Ml:'ml',Pcs:'pc'};
+// Fallback copy of the imported workbook, used only when the shared store is unreachable in this view.
+const SEED={"ings":[{"cat":"grocery","marketPrice":null,"name":"Green Peas Tin","oldPrice":1,"order":84,"price":0.318,"qty":380,"unit":"Gram","id":"i085"},{"cat":"grocery","marketPrice":null,"name":"Safroon","oldPrice":1.09,"order":101,"price":1.166,"qty":1,"unit":"Gram","id":"i102"},{"cat":"grocery","marketPrice":null,"name":"Saboosa","oldPrice":0.029,"order":103,"price":0.025,"qty":1,"unit":"Pcs","id":"i104"},{"cat":"masala","marketPrice":null,"name":"Cummin Seeds","oldPrice":5.6,"order":46,"price":2.8,"qty":1000,"unit":"Gram","id":"i047"},{"cat":"packaging","marketPrice":null,"name":"CONTENER NO : (3)","oldPrice":13,"order":114,"price":6.3,"qty":300,"unit":"Pcs","id":"i115"},{"cat":"grocery","marketPrice":null,"name":"Flour Brown","oldPrice":0.1,"order":79,"price":0.1,"qty":1000,"unit":"Gram","id":"i080"},{"cat":"beans","marketPrice":0.566,"name":"Moong Dal","oldPrice":0.74,"order":32,"price":0.668,"qty":1000,"unit":"Gram","id":"i033"},{"cat":"masala","marketPrice":null,"name":"Cinamon Stick","oldPrice":2.6,"order":47,"price":2.3636,"qty":1000,"unit":"Gram","id":"i048"},{"cat":"vegetable","marketPrice":0.9,"name":"Okra","oldPrice":1.949,"order":19,"price":1.35,"qty":1000,"unit":"Gram","id":"i020"},{"cat":"grocery","marketPrice":null,"name":"Balaleet","oldPrice":0.565,"order":73,"price":0.54,"qty":500,"unit":"Gram","id":"i074"},{"cat":"vegetable","marketPrice":0.089,"name":"Mint Leaves","oldPrice":0.11,"order":17,"price":0.1,"qty":55,"unit":"Gram","id":"i018"},{"cat":"vegetable","marketPrice":0.084,"name":"Parsely Leaves","oldPrice":0.12,"order":20,"price":0.1,"qty":55,"unit":"Gram","id":"i021"},{"cat":"grocery","marketPrice":null,"name":"Sago","oldPrice":0.6,"order":100,"price":0.6,"qty":1000,"unit":"Gram","id":"i101"},{"cat":"packaging","marketPrice":null,"name":"CONTENER NO : (1)","oldPrice":15,"order":113,"price":12.5,"qty":500,"unit":"Pcs","id":"i114"},{"cat":"beans","marketPrice":null,"name":"Jareesh","oldPrice":0,"order":30,"price":0,"qty":1000,"unit":"Gram","id":"i031"},{"cat":"beans","marketPrice":null,"name":"Green lentils","oldPrice":0.78,"order":28,"price":0.4,"qty":1000,"unit":"Gram","id":"i029"},{"cat":"grocery","marketPrice":null,"name":"Milk","oldPrice":0.5,"order":89,"price":0.5,"qty":1000,"unit":"Gram","id":"i090"},{"cat":"beans","marketPrice":null,"name":"Sugar","oldPrice":0.4,"order":36,"price":0.3,"qty":1000,"unit":"Gram","id":"i037"},{"cat":"vegetable","marketPrice":0.666,"name":"Long Chilly","oldPrice":1,"order":16,"price":1.1,"qty":1000,"unit":"Gram","id":"i017"},{"cat":"beans","marketPrice":0.666,"name":"Bagela","oldPrice":1.21,"order":25,"price":1.55,"qty":1000,"unit":"Gram","id":"i026"},{"cat":"frozen","marketPrice":null,"name":"Minced Beef","oldPrice":0.29,"order":69,"price":0.239,"qty":400,"unit":"Gram","id":"i070"},{"cat":"grocery","marketPrice":null,"name":"Annar Sause","oldPrice":0.73,"order":71,"price":0.75,"qty":1000,"unit":"Gram","id":"i072"},{"cat":"grocery","marketPrice":null,"name":"Kuwaiti Powder","oldPrice":3.75,"order":87,"price":3.75,"qty":1000,"unit":"Gram","id":"i088"},{"cat":"packaging","marketPrice":null,"name":"Bag Large","oldPrice":null,"order":125,"price":0.04,"qty":1,"unit":"Pcs","id":"i126"},{"cat":"beans","marketPrice":0.433,"name":"Chana Dal","oldPrice":0.7,"order":27,"price":0.581,"qty":1000,"unit":"Gram","id":"i028"},{"cat":"frozen","marketPrice":0.32,"name":"Chicken Liver","oldPrice":0.385,"order":67,"price":0.386,"qty":450,"unit":"Gram","id":"i068"},{"cat":"grocery","marketPrice":null,"name":"Butter","oldPrice":1.08,"order":72,"price":0.8,"qty":1000,"unit":"Gram","id":"i073"},{"cat":"masala","marketPrice":null,"name":"Crushed Red Chilly","oldPrice":2.9,"order":52,"price":2.636,"qty":1000,"unit":"Gram","id":"i053"},{"cat":"grocery","marketPrice":null,"name":"Date Paste","oldPrice":null,"order":117,"price":0.73,"qty":1000,"unit":"Gram","id":"i118"},{"cat":"beans","marketPrice":0.425,"name":"Rice 1121","oldPrice":0.525,"order":33,"price":0.575,"qty":1000,"unit":"Gram","id":"i034"},{"cat":"grocery","marketPrice":null,"name":"Oil Corn","oldPrice":1,"order":93,"price":0.9,"qty":1000,"unit":"Ml","id":"i094"},{"cat":"frozen","marketPrice":0.95,"name":"Beef Liver","oldPrice":1.21,"order":62,"price":1.409,"qty":1000,"unit":"Gram","id":"i063"},{"cat":"grocery","marketPrice":null,"name":"MABOOJ + DAQOOS","oldPrice":null,"order":129,"price":0,"qty":1000,"unit":"Gram","id":"i130"},{"cat":"masala","marketPrice":null,"name":"Cummin Powder","oldPrice":3.1,"order":45,"price":2.818,"qty":1000,"unit":"Gram","id":"i046"},{"cat":"masala","marketPrice":null,"name":"Sem sem Seeds","oldPrice":1.9,"order":59,"price":1.57,"qty":1000,"unit":"Gram","id":"i060"},{"cat":"vegetable","marketPrice":0.07,"name":"Coriander Leaves","oldPrice":0.08,"order":1,"price":0.095,"qty":55,"unit":"Gram","id":"i002"},{"cat":"vegetable","marketPrice":0.45,"name":"Carrot","oldPrice":0.45,"order":5,"price":0.85,"qty":1000,"unit":"Gram","id":"i006"},{"cat":"grocery","marketPrice":1.1,"name":"Tahina","oldPrice":1.466,"order":105,"price":0.9696,"qty":1000,"unit":"Gram","id":"i106"},{"cat":"vegetable","marketPrice":0.35,"name":"Cucuamber","oldPrice":0.55,"order":6,"price":0.45,"qty":1000,"unit":"Gram","id":"i007"},{"cat":"frozen","marketPrice":null,"name":"Meat Boby Vel","oldPrice":2.2,"order":64,"price":2.2,"qty":1000,"unit":"Gram","id":"i065"},{"cat":"grocery","marketPrice":null,"name":"Mashroom","oldPrice":0.964,"order":91,"price":1,"qty":1000,"unit":"Gram","id":"i092"},{"cat":"grocery","marketPrice":null,"name":"Sodium Bicarbonate","oldPrice":0.3,"order":104,"price":0.3,"qty":1000,"unit":"Gram","id":"i105"},{"cat":"vegetable","marketPrice":0.175,"name":"Potato","oldPrice":0.25,"order":21,"price":0.36,"qty":1000,"unit":"Gram","id":"i022"},{"cat":"packaging","marketPrice":null,"name":"Bag XS","oldPrice":null,"order":126,"price":0.01,"qty":1,"unit":"Pcs","id":"i127"},{"cat":"vegetable","marketPrice":0.375,"name":"Cauliflower","oldPrice":0.9,"order":4,"price":0.65,"qty":1000,"unit":"Gram","id":"i005"},{"cat":"grocery","marketPrice":null,"name":"HASHOO","oldPrice":null,"order":128,"price":0,"qty":1000,"unit":"Gram","id":"i129"},{"cat":"packaging","marketPrice":null,"name":"CONTENER NO : (5)","oldPrice":17,"order":116,"price":17.5,"qty":150,"unit":"Pcs","id":"i117"},{"cat":"masala","marketPrice":null,"name":"Cinamon Powder","oldPrice":2.91,"order":48,"price":2.6454,"qty":1000,"unit":"Gram","id":"i049"},{"cat":"packaging","marketPrice":null,"name":"CONTENER NO : (4)","oldPrice":17,"order":115,"price":9.45,"qty":300,"unit":"Pcs","id":"i116"},{"cat":"masala","marketPrice":null,"name":"Curry Powder","oldPrice":1.5,"order":43,"price":1.65,"qty":1000,"unit":"Gram","id":"i044"},{"cat":"vegetable","marketPrice":0.23,"name":"Cabbage White","oldPrice":0.274,"order":3,"price":0.4,"qty":1000,"unit":"Gram","id":"i004"},{"cat":"masala","marketPrice":null,"name":"Black Pepper Seeds","oldPrice":4.18,"order":38,"price":4.09,"qty":1000,"unit":"Gram","id":"i039"},{"cat":"grocery","marketPrice":null,"name":"Green Peas (S.P)","oldPrice":0.35,"order":85,"price":0.293,"qty":380,"unit":"Gram","id":"i086"},{"cat":"vegetable","marketPrice":0.75,"name":"Ginger","oldPrice":1.26,"order":12,"price":2,"qty":1000,"unit":"Gram","id":"i013"},{"cat":"frozen","marketPrice":1.15,"name":"Chicken Breast","oldPrice":1.32,"order":66,"price":1.5,"qty":1000,"unit":"Gram","id":"i067"},{"cat":"grocery","marketPrice":null,"name":"Date Syrup","oldPrice":1.21,"order":97,"price":1.25,"qty":300,"unit":"Gram","id":"i098"},{"cat":"frozen","marketPrice":1.833,"name":"Beef Slice","oldPrice":2.365,"order":63,"price":2.636,"qty":900,"unit":"Gram","id":"i064"},{"cat":"masala","marketPrice":null,"name":"Tandori Masala Powder","oldPrice":4.8,"order":61,"price":4,"qty":1000,"unit":"Gram","id":"i062"},{"cat":"packaging","marketPrice":null,"name":"Bag Medium","oldPrice":null,"order":124,"price":0.03,"qty":1,"unit":"Pcs","id":"i125"},{"cat":"beans","marketPrice":1.3,"name":"Raison","oldPrice":1.65,"order":34,"price":1.75,"qty":1000,"unit":"Gram","id":"i035"},{"cat":"grocery","marketPrice":null,"name":"Olive Oil","oldPrice":1.85,"order":95,"price":1.54,"qty":5000,"unit":"Ml","id":"i096"},{"cat":"masala","marketPrice":null,"name":"Food Colour Red","oldPrice":0.5,"order":55,"price":0.4,"qty":1000,"unit":"Gram","id":"i056"},{"cat":"grocery","marketPrice":null,"name":"Magi","oldPrice":0.041,"order":90,"price":0.083,"qty":1,"unit":"Pcs","id":"i091"},{"cat":"beans","marketPrice":0.766,"name":"White Kidney Beans","oldPrice":0.9,"order":37,"price":0.818,"qty":1000,"unit":"Gram","id":"i038"},{"cat":"vegetable","marketPrice":1.087,"name":"Curry Leaves","oldPrice":1.959,"order":2,"price":1.95,"qty":1000,"unit":"Gram","id":"i003"},{"cat":"grocery","marketPrice":null,"name":"Tomato Paste","oldPrice":0.84,"order":108,"price":0.6,"qty":1000,"unit":"Gram","id":"i109"},{"cat":"grocery","marketPrice":null,"name":"Yest Powdre","oldPrice":1.73,"order":109,"price":1.572,"qty":500,"unit":"Gram","id":"i110"},{"cat":"grocery","marketPrice":null,"name":"Vinger","oldPrice":0.5,"order":110,"price":0.5,"qty":3000,"unit":"Gram","id":"i111"},{"cat":"masala","marketPrice":null,"name":"Red Chilly Powder","oldPrice":2.15,"order":56,"price":1.772,"qty":1000,"unit":"Gram","id":"i057"},{"cat":"masala","marketPrice":null,"name":"Black Pepper Powder","oldPrice":4.62,"order":39,"price":2.272,"qty":1000,"unit":"Gram","id":"i040"},{"cat":"masala","marketPrice":null,"name":"Salt","oldPrice":0.07,"order":58,"price":0.165,"qty":1000,"unit":"Gram","id":"i059"},{"cat":"masala","marketPrice":null,"name":"Food Colour Yellow","oldPrice":0.5,"order":53,"price":0.4,"qty":100,"unit":"Gram","id":"i054"},{"cat":"frozen","marketPrice":1.5,"name":"Qeema Meat","oldPrice":1.76,"order":70,"price":2.2,"qty":1000,"unit":"Gram","id":"i071"},{"cat":"grocery","marketPrice":null,"name":"Karak Milk","oldPrice":0.3,"order":86,"price":0.265,"qty":410,"unit":"Gram","id":"i087"},{"cat":"masala","marketPrice":null,"name":"Cardmon Powder","oldPrice":15.5,"order":50,"price":15.4,"qty":1000,"unit":"Gram","id":"i051"},{"cat":"masala","marketPrice":null,"name":"Turmeric Powder","oldPrice":1.57,"order":60,"price":1.8,"qty":1000,"unit":"Gram","id":"i061"},{"cat":"vegetable","marketPrice":0.571,"name":"Green Capiscum","oldPrice":0.85,"order":10,"price":0.65,"qty":1000,"unit":"Gram","id":"i011"},{"cat":"frozen","marketPrice":1.8,"name":"Crispy Chcike","oldPrice":2,"order":65,"price":2.2,"qty":1000,"unit":"Gram","id":"i066"},{"cat":"grocery","marketPrice":null,"name":"Rose Water + Safroon","oldPrice":0,"order":98,"price":0.3,"qty":450,"unit":"Ml","id":"i099"},{"cat":"grocery","marketPrice":null,"name":"Tea","oldPrice":1.7,"order":106,"price":2,"qty":1000,"unit":"Gram","id":"i107"},{"cat":"grocery","marketPrice":null,"name":"Tea Bag","oldPrice":1.1,"order":107,"price":0.011,"qty":1,"unit":"Pcs","id":"i108"},{"cat":"vegetable","marketPrice":0.5,"name":"Green Chilly","oldPrice":0.7,"order":13,"price":0.8,"qty":1000,"unit":"Gram","id":"i014"},{"cat":"vegetable","marketPrice":0.36,"name":"Eggplant","oldPrice":0.58,"order":8,"price":0.55,"qty":1000,"unit":"Gram","id":"i009"},{"cat":"vegetable","marketPrice":0.08,"name":"Dill Leaves","oldPrice":0.097,"order":7,"price":0.09,"qty":60,"unit":"Gram","id":"i008"},{"cat":"grocery","marketPrice":null,"name":"Flour White","oldPrice":0.1,"order":80,"price":0.1,"qty":1000,"unit":"Gram","id":"i081"},{"cat":"grocery","marketPrice":null,"name":"Custard","oldPrice":1.1,"order":75,"price":1,"qty":450,"unit":"Gram","id":"i076"},{"cat":"masala","marketPrice":null,"name":"Black Lemone Whole","oldPrice":1.6,"order":41,"price":1.76,"qty":1000,"unit":"Gram","id":"i042"},{"cat":"masala","marketPrice":null,"name":"Cloves Seeds","oldPrice":6.5,"order":44,"price":5.3636,"qty":1000,"unit":"Gram","id":"i045"},{"cat":"grocery","marketPrice":null,"name":"Qeemat Powder","oldPrice":1.45,"order":96,"price":1.45,"qty":1000,"unit":"Gram","id":"i097"},{"cat":"grocery","marketPrice":null,"name":"Fool","oldPrice":0.504,"order":77,"price":0.458,"qty":450,"unit":"Gram","id":"i078"},{"cat":"grocery","marketPrice":null,"name":"Aseel Ghee","oldPrice":1.533,"order":92,"price":1.232,"qty":1000,"unit":"Ml","id":"i093"},{"cat":"frozen","marketPrice":1.15,"name":"Full Chicken","oldPrice":1.293,"order":68,"price":1.363,"qty":1000,"unit":"Gram","id":"i069"},{"cat":"beans","marketPrice":0.433,"name":"Masoor Daal","oldPrice":0.55,"order":31,"price":0.454,"qty":1000,"unit":"Gram","id":"i032"},{"cat":"grocery","marketPrice":null,"name":"Baking Powder","oldPrice":1.7,"order":74,"price":1.545,"qty":440,"unit":"Gram","id":"i075"},{"cat":"grocery","marketPrice":null,"name":"Cucuamber Pickel","oldPrice":0.446,"order":76,"price":0.513,"qty":1000,"unit":"Gram","id":"i077"},{"cat":"grocery","marketPrice":null,"name":"Nahai","oldPrice":null,"order":127,"price":1.08,"qty":1000,"unit":"Gram","id":"i128"},{"cat":"packaging","marketPrice":null,"name":"Alluminium Container M","oldPrice":null,"order":120,"price":0.6,"qty":100,"unit":"Gram","id":"i121"},{"cat":"vegetable","marketPrice":0.025,"name":"Bagal Leaves","oldPrice":0.025,"order":0,"price":0.04,"qty":50,"unit":"Gram","id":"i001"},{"cat":"packaging","marketPrice":null,"name":"Alluminium Container S","oldPrice":null,"order":119,"price":0.6,"qty":250,"unit":"Gram","id":"i120"},{"cat":"grocery","marketPrice":null,"name":"Cheddar Cheese","oldPrice":3.2,"order":111,"price":3.7,"qty":1700,"unit":"Gram","id":"i112"},{"cat":"vegetable","marketPrice":0.5,"name":"Tomato","oldPrice":0.625,"order":23,"price":0.5,"qty":1000,"unit":"Gram","id":"i024"},{"cat":"beans","marketPrice":0.5,"name":"Black Eye Beans","oldPrice":0.8,"order":24,"price":0.73,"qty":1000,"unit":"Gram","id":"i025"},{"cat":"packaging","marketPrice":null,"name":"Bread","oldPrice":null,"order":122,"price":0.012,"qty":1,"unit":"Pcs","id":"i123"},{"cat":"grocery","marketPrice":0.558,"name":"Vegetable Oil","oldPrice":0.666,"order":94,"price":0.594,"qty":1000,"unit":"Ml","id":"i095"},{"cat":"grocery","marketPrice":null,"name":"Rose Water","oldPrice":0.15,"order":99,"price":0.2,"qty":450,"unit":"Ml","id":"i100"},{"cat":"masala","marketPrice":null,"name":"Black Lemone Powdre","oldPrice":0,"order":40,"price":4.62,"qty":1000,"unit":"Gram","id":"i041"},{"cat":"masala","marketPrice":null,"name":"Cardmon Seeds","oldPrice":15,"order":49,"price":16,"qty":1000,"unit":"Gram","id":"i050"},{"cat":"grocery","marketPrice":null,"name":"Baked Beans","oldPrice":0.33,"order":83,"price":0.36,"qty":380,"unit":"Gram","id":"i084"},{"cat":"grocery","marketPrice":null,"name":"Flour Kabab","oldPrice":0.403,"order":81,"price":0.3333,"qty":1000,"unit":"Gram","id":"i082"},{"cat":"grocery","marketPrice":null,"name":"Lemon Lquid","oldPrice":0.55,"order":88,"price":0.5,"qty":946,"unit":"Gram","id":"i089"},{"cat":"vegetable","marketPrice":1.2,"name":"Garlic Peeled","oldPrice":1.4,"order":9,"price":1.5,"qty":1000,"unit":"Gram","id":"i010"},{"cat":"packaging","marketPrice":null,"name":"Alluminium Container L","oldPrice":null,"order":121,"price":0.6,"qty":100,"unit":"Gram","id":"i122"},{"cat":"grocery","marketPrice":null,"name":"Flour Corn","oldPrice":0.35,"order":82,"price":0.386,"qty":1000,"unit":"Gram","id":"i083"},{"cat":"grocery","marketPrice":null,"name":"MACARONI","oldPrice":0.605,"order":118,"price":0.6,"qty":500,"unit":"Gram","id":"i119"},{"cat":"vegetable","marketPrice":0.129,"name":"Onion","oldPrice":0.2,"order":18,"price":0.45,"qty":1000,"unit":"Gram","id":"i019"},{"cat":"grocery","marketPrice":null,"name":"Egg","oldPrice":0.047,"order":78,"price":0.035,"qty":1,"unit":"Pcs","id":"i079"},{"cat":"beans","marketPrice":null,"name":"Rice Broken","oldPrice":0.25,"order":35,"price":0.3,"qty":1000,"unit":"Gram","id":"i036"},{"cat":"grocery","marketPrice":null,"name":"Sambosa Pepper","oldPrice":0.03,"order":102,"price":0.012,"qty":1,"unit":"Pcs","id":"i103"},{"cat":"masala","marketPrice":null,"name":"Mix Masala Powder","oldPrice":3,"order":51,"price":1.65,"qty":1000,"unit":"Gram","id":"i052"},{"cat":"beans","marketPrice":null,"name":"Harees","oldPrice":0.5,"order":29,"price":0.45,"qty":1000,"unit":"Gram","id":"i030"},{"cat":"packaging","marketPrice":null,"name":"Bag Small","oldPrice":null,"order":123,"price":0.02,"qty":1,"unit":"Pcs","id":"i124"},{"cat":"masala","marketPrice":null,"name":"Coriander Powder","oldPrice":1.3,"order":42,"price":1.8,"qty":1000,"unit":"Gram","id":"i043"},{"cat":"masala","marketPrice":null,"name":"Round Red Chilly","oldPrice":3.03,"order":57,"price":3.1,"qty":1000,"unit":"Gram","id":"i058"},{"cat":"vegetable","marketPrice":0.02,"name":"Spinach Leaves","oldPrice":0.02,"order":22,"price":0.04,"qty":50,"unit":"Gram","id":"i023"},{"cat":"vegetable","marketPrice":0.533,"name":"Lemon","oldPrice":0.76,"order":15,"price":1,"qty":1000,"unit":"Gram","id":"i016"},{"cat":"vegetable","marketPrice":0.5,"name":"Ginger + Garlic Mix","oldPrice":0.5,"order":11,"price":1.2,"qty":1000,"unit":"Gram","id":"i012"},{"cat":"masala","marketPrice":null,"name":"Food Colour Red","oldPrice":0.5,"order":54,"price":0.4,"qty":100,"unit":"Gram","id":"i055"},{"cat":"packaging","marketPrice":null,"name":"SPOON","oldPrice":0.29,"order":112,"price":0.32,"qty":50,"unit":"Pcs","id":"i113"},{"cat":"vegetable","marketPrice":1,"name":"Ice Burg Lettuce","oldPrice":1.2,"order":14,"price":1.1,"qty":1000,"unit":"Gram","id":"i015"},{"cat":"beans","marketPrice":0.84,"name":"ChickPeas","oldPrice":1.036,"order":26,"price":0.66,"qty":1000,"unit":"Gram","id":"i027"}],"recs":[{"brand":"FAREEQ BIN AQOOL","cat":"sweet","lines":[{"ingId":"i118","qty":1000},{"ingId":"i081","qty":1000},{"ingId":"i060","qty":45},{"ingId":"i095","qty":600}],"mode":"div","name":"Fateeta","order":3,"sizes":[{"bag":"i127","breadId":"i123","breadQty":0,"container":"i114","mult":10,"name":"Single","other":0,"price":0.6,"priceT":0.4,"spoonId":"i113","spoonQty":1},{"bag":"i124","breadId":"i123","breadQty":0,"container":"i115","mult":7,"name":"Small","other":0,"price":0.9,"priceT":1,"spoonId":"i113","spoonQty":2},{"bag":"i125","breadId":"i123","breadQty":0,"container":"i116","mult":4,"name":"Medium","other":0,"price":1.6,"priceT":1.5,"spoonId":"i113","spoonQty":3},{"bag":"i126","breadId":"i123","breadQty":0,"container":"i117","mult":2,"name":"Large","other":0,"price":3,"priceT":2.5,"spoonId":"i113","spoonQty":4}],"targetPct":30,"id":"fateeta"},{"brand":"FAREEQ BIN AQOOL","cat":"sweet","lines":[{"ingId":"i097","qty":1000},{"ingId":"i060","qty":60},{"ingId":"i095","qty":400},{"ingId":"i098","qty":300},{"ingId":"i100","qty":100}],"mode":"div","name":"Qeemat","order":1,"sizes":[{"bag":"i125","breadId":"i123","breadQty":0,"container":"i120","mult":7,"name":"Medium","other":0,"price":1.4,"priceT":1.8,"spoonId":"i113","spoonQty":0}],"targetPct":30,"id":"qeemat"},{"brand":"FAREEQ BIN AQOOL","cat":"egg","lines":[{"ingId":"i079","qty":2},{"ingId":"i095","qty":30},{"ingId":"i109","qty":10},{"ingId":"i019","qty":60},{"ingId":"i002","qty":2},{"ingId":"i024","qty":120},{"ingId":"i061","qty":1.25},{"ingId":"i046","qty":1.25},{"ingId":"i062","qty":1.25},{"ingId":"i044","qty":1.25},{"ingId":"i059","qty":1.25}],"mode":"mult","name":"Egg Shakshoka","order":3,"sizes":[{"bag":"i124","breadId":"i123","breadQty":1,"container":"i115","mult":1,"name":"Small","other":0,"price":1.2,"priceT":1.6,"spoonId":"i113","spoonQty":1},{"bag":"i125","breadId":"i123","breadQty":2,"container":"i116","mult":2,"name":"Medium","other":0,"price":2.2,"priceT":2.8,"spoonId":"i113","spoonQty":2},{"bag":"i126","breadId":"i123","breadQty":4,"container":"i117","mult":4,"name":"Large","other":0,"price":4.2,"priceT":5,"spoonId":"i113","spoonQty":3}],"targetPct":30,"id":"egg-shakshoka"},{"brand":"FAREEQ BIN AQOOL","cat":"egg","lines":[{"ingId":"i086","qty":190},{"ingId":"i079","qty":2},{"ingId":"i112","qty":10},{"ingId":"i019","qty":60},{"ingId":"i017","qty":7.5},{"ingId":"i024","qty":80},{"ingId":"i022","qty":7.5},{"ingId":"i011","qty":15},{"ingId":"i095","qty":30},{"ingId":"i109","qty":10},{"ingId":"i059","qty":2.5},{"ingId":"i096","qty":7.5},{"ingId":"i106","qty":15},{"ingId":"i046","qty":1.25},{"ingId":"i062","qty":1.25},{"ingId":"i044","qty":1.25},{"ingId":"i052","qty":1.25}],"mode":"mult","name":"S.Egg Bin Aqool","order":2,"sizes":[{"bag":"i124","breadId":"i123","breadQty":1,"container":"i115","mult":1,"name":"Small","other":0,"price":1.6,"priceT":2,"spoonId":"i113","spoonQty":1},{"bag":"i125","breadId":"i123","breadQty":2,"container":"i116","mult":2,"name":"Medium","other":0,"price":3,"priceT":3.6,"spoonId":"i113","spoonQty":2},{"bag":"i126","breadId":"i123","breadQty":4,"container":"i117","mult":4,"name":"Large","other":0,"price":5.6,"priceT":6.8,"spoonId":"i113","spoonQty":3}],"targetPct":30,"id":"s-egg-bin-aqool"},{"brand":"FAREEQ BIN AQOOL","cat":"traditional","lines":[{"ingId":"i025","qty":500},{"ingId":"i075","qty":0},{"ingId":"i059","qty":22.5}],"mode":"div","name":"Black Eye Beans","order":5,"sizes":[{"bag":"i127","breadId":"i123","breadQty":0,"container":"i114","mult":8,"name":"Single","other":0,"price":0.4,"priceT":0.4,"spoonId":"i113","spoonQty":1},{"bag":"i124","breadId":"i123","breadQty":0,"container":"i115","mult":6,"name":"Small","other":0,"price":0.6,"priceT":0.75,"spoonId":"i113","spoonQty":1},{"bag":"i125","breadId":"i123","breadQty":0,"container":"i116","mult":3,"name":"Medium","other":0,"price":1,"priceT":1.3,"spoonId":"i113","spoonQty":2},{"bag":"i126","breadId":"i123","breadQty":0,"container":"i117","mult":1.5,"name":"Large","other":0,"price":1.8,"priceT":2.2,"spoonId":"i113","spoonQty":3}],"targetPct":30,"id":"black-eye-beans"},{"brand":"FAREEQ BIN AQOOL","cat":"traditional","lines":[{"ingId":"i026","qty":1000},{"ingId":"i059","qty":45},{"ingId":"i075","qty":2.5},{"ingId":"i088","qty":1.25}],"mode":"div","name":"Bajela","order":8,"sizes":[{"bag":"i127","breadId":"i123","breadQty":0,"container":"i114","mult":15,"name":"Single","other":0,"price":0.4,"priceT":0.4,"spoonId":"i113","spoonQty":1},{"bag":"i124","breadId":"i123","breadQty":0,"container":"i115","mult":9,"name":"Small","other":0,"price":0.6,"priceT":0.75,"spoonId":"i113","spoonQty":1},{"bag":"i125","breadId":"i123","breadQty":0,"container":"i116","mult":6,"name":"Medium","other":0,"price":1,"priceT":1.2,"spoonId":"i113","spoonQty":2},{"bag":"i126","breadId":"i123","breadQty":0,"container":"i117","mult":3,"name":"Large","other":0,"price":1.9,"priceT":2.2,"spoonId":"i113","spoonQty":3}],"targetPct":30,"id":"bajela"},{"brand":"FAREEQ BIN AQOOL","cat":"traditional","lines":[{"ingId":"i067","qty":500},{"ingId":"i036","qty":1000},{"ingId":"i019","qty":300},{"ingId":"i109","qty":1000},{"ingId":"i011","qty":50},{"ingId":"i012","qty":45},{"ingId":"i014","qty":10},{"ingId":"i023","qty":200},{"ingId":"i001","qty":200},{"ingId":"i002","qty":200},{"ingId":"i008","qty":200},{"ingId":"i095","qty":100},{"ingId":"i024","qty":240},{"ingId":"i047","qty":2},{"ingId":"i039","qty":2},{"ingId":"i061","qty":15},{"ingId":"i046","qty":15},{"ingId":"i043","qty":10},{"ingId":"i062","qty":10},{"ingId":"i044","qty":10},{"ingId":"i059","qty":22.5}],"mode":"div","name":"Madrooba","order":12,"sizes":[{"bag":"i127","breadId":"i123","breadQty":0.5,"container":"i114","mult":28,"name":"Single","other":0,"price":0.6,"priceT":0.6,"spoonId":"i113","spoonQty":1},{"bag":"i124","breadId":"i123","breadQty":1,"container":"i115","mult":16,"name":"Small","other":0,"price":1.1,"priceT":1.35,"spoonId":"i113","spoonQty":1},{"bag":"i125","breadId":"i123","breadQty":2,"container":"i116","mult":8,"name":"Medium","other":0,"price":1.8,"priceT":2.4,"spoonId":"i113","spoonQty":2},{"bag":"i126","breadId":"i123","breadQty":4,"container":"i117","mult":4,"name":"Large","other":0,"price":3.2,"priceT":4.4,"spoonId":"i113","spoonQty":3}],"targetPct":30,"id":"madrooba"},{"brand":"FAREEQ BIN AQOOL","cat":"traditional","lines":[{"ingId":"i038","qty":175},{"ingId":"i025","qty":175},{"ingId":"i033","qty":175},{"ingId":"i029","qty":175},{"ingId":"i030","qty":175},{"ingId":"i036","qty":175},{"ingId":"i027","qty":175},{"ingId":"i008","qty":60},{"ingId":"i002","qty":55},{"ingId":"i001","qty":50},{"ingId":"i021","qty":55},{"ingId":"i023","qty":100},{"ingId":"i019","qty":150},{"ingId":"i095","qty":200},{"ingId":"i059","qty":15},{"ingId":"i052","qty":15},{"ingId":"i046","qty":7},{"ingId":"i061","qty":22}],"mode":"div","name":"Shilla","order":11,"sizes":[{"bag":"i127","breadId":"i123","breadQty":0,"container":"i114","mult":18,"name":"Single","other":0,"price":0.6,"priceT":0.6,"spoonId":"i113","spoonQty":1},{"bag":"i124","breadId":"i123","breadQty":0,"container":"i115","mult":11,"name":"Small","other":0,"price":1,"priceT":1.35,"spoonId":"i113","spoonQty":1},{"bag":"i125","breadId":"i123","breadQty":0,"container":"i116","mult":7,"name":"Medium","other":0,"price":1.6,"priceT":2.2,"spoonId":"i113","spoonQty":2},{"bag":"i126","breadId":"i123","breadQty":0,"container":"i117","mult":4,"name":"Large","other":0,"price":2.9,"priceT":3.8,"spoonId":"i113","spoonQty":3}],"targetPct":30,"id":"sheela"},{"brand":"FAREEQ BIN AQOOL","cat":"egg","lines":[{"ingId":"i070","qty":30},{"ingId":"i079","qty":2},{"ingId":"i095","qty":15},{"ingId":"i109","qty":5},{"ingId":"i019","qty":60},{"ingId":"i002","qty":2},{"ingId":"i024","qty":120},{"ingId":"i011","qty":15},{"ingId":"i061","qty":1.2},{"ingId":"i046","qty":1.2},{"ingId":"i062","qty":1.2},{"ingId":"i052","qty":1.2},{"ingId":"i044","qty":1.2},{"ingId":"i059","qty":1.2}],"mode":"mult","name":"Egg Makhalama","order":5,"sizes":[{"bag":"i124","breadId":"i123","breadQty":1,"container":"i115","mult":1,"name":"Small","other":0,"price":1.4,"priceT":1.85,"spoonId":"i113","spoonQty":1.45},{"bag":"i125","breadId":"i123","breadQty":2,"container":"i116","mult":2,"name":"Medium","other":0,"price":2.6,"priceT":3.2,"spoonId":"i113","spoonQty":4.5},{"bag":"i126","breadId":"i123","breadQty":4,"container":"i117","mult":4,"name":"Large","other":0,"price":5,"priceT":6,"spoonId":"i113","spoonQty":6}],"targetPct":30,"id":"egg-makhalama"},{"brand":"FAREEQ BIN AQOOL","cat":"egg","lines":[{"ingId":"i079","qty":4},{"ingId":"i095","qty":30}],"mode":"mult","name":"Egg Eyoon","order":8,"sizes":[{"bag":"i124","breadId":"i123","breadQty":1,"container":"i115","mult":1,"name":"Small","other":0,"price":0.9,"priceT":1.2,"spoonId":"i113","spoonQty":1},{"bag":"i125","breadId":"i123","breadQty":2,"container":"i116","mult":2,"name":"Medium","other":0,"price":1.7,"priceT":2.2,"spoonId":"i113","spoonQty":2},{"bag":"i126","breadId":"i123","breadQty":4,"container":"i117","mult":4,"name":"Large","other":0,"price":3.3,"priceT":3.8,"spoonId":"i113","spoonQty":3}],"targetPct":30,"id":"egg-eyoon"},{"brand":"FAREEQ BIN AQOOL","cat":"traditional","lines":[{"ingId":"i030","qty":1000},{"ingId":"i064","qty":900},{"ingId":"i059","qty":30},{"ingId":"i024","qty":250},{"ingId":"i093","qty":150}],"mode":"div","name":"Harees","order":9,"sizes":[{"bag":"i127","breadId":"i123","breadQty":0,"container":"i114","mult":16,"name":"Single","other":0,"price":0.6,"priceT":0.6,"spoonId":"i113","spoonQty":1},{"bag":"i127","breadId":"i123","breadQty":0,"container":"i115","mult":12,"name":"Small","other":0,"price":1,"priceT":1.35,"spoonId":"i113","spoonQty":1},{"bag":"i125","breadId":"i123","breadQty":0,"container":"i116","mult":6,"name":"Medium","other":0,"price":1.6,"priceT":2.4,"spoonId":"i113","spoonQty":2},{"bag":"i125","breadId":"i123","breadQty":0,"container":"i117","mult":3.5,"name":"Large","other":0,"price":2.9,"priceT":4.4,"spoonId":"i113","spoonQty":3}],"targetPct":30,"id":"harees"},{"brand":"FAREEQ BIN AQOOL","cat":"traditional","lines":[{"ingId":"i034","qty":1000},{"ingId":"i095","qty":60},{"ingId":"i091","qty":1},{"ingId":"i059","qty":15},{"ingId":"i035","qty":50},{"ingId":"i055","qty":1},{"ingId":"i054","qty":1},{"ingId":"i069","qty":1000},{"ingId":"i019","qty":200},{"ingId":"i129","qty":100},{"ingId":"i130","qty":0.05},{"ingId":"i010","qty":20},{"ingId":"i039","qty":2},{"ingId":"i045","qty":2},{"ingId":"i047","qty":2},{"ingId":"i050","qty":2},{"ingId":"i048","qty":5}],"mode":"div","name":"Rice & Chicken","order":4,"sizes":[{"bag":null,"breadId":"i123","breadQty":0,"container":"i120","mult":5,"name":"Small","other":0.016,"price":1.2,"priceT":1.2,"spoonId":"i113","spoonQty":1},{"bag":"i125","breadId":"i123","breadQty":0,"container":"i121","mult":3,"name":"Medium","other":0.048,"price":2.3,"priceT":2.3,"spoonId":"i113","spoonQty":3},{"bag":"i126","breadId":"i123","breadQty":0,"container":"i122","mult":1.5,"name":"Large","other":0.1109,"price":4.4,"priceT":4.4,"spoonId":"i113","spoonQty":4}],"targetPct":30,"id":"rice"},{"brand":"FAREEQ BIN AQOOL","lines":[],"name":"New dish","order":1,"sizes":[],"targetPct":30,"id":"d-muji72hjbu6d"},{"brand":"FAREEQ BIN AQOOL","cat":"egg","lines":[{"ingId":"i079","qty":2},{"ingId":"i095","qty":30},{"ingId":"i109","qty":15},{"ingId":"i024","qty":240},{"ingId":"i052","qty":1.25},{"ingId":"i046","qty":1.25},{"ingId":"i062","qty":1.25},{"ingId":"i040","qty":1.25},{"ingId":"i059","qty":2.5}],"mode":"mult","name":"Egg & Tomato","order":10,"sizes":[{"bag":"i124","breadId":"i123","breadQty":1,"container":"i115","mult":1,"name":"Small","other":0,"price":1.2,"priceT":1.6,"spoonId":"i113","spoonQty":1},{"bag":"i125","breadId":"i123","breadQty":2,"container":"i116","mult":2,"name":"Medium","other":0,"price":2.2,"priceT":2.8,"spoonId":"i113","spoonQty":2},{"bag":"i126","breadId":"i123","breadQty":4,"container":"i117","mult":4,"name":"Large","other":0,"price":4.2,"priceT":5,"spoonId":"i113","spoonQty":3}],"targetPct":30,"id":"egg-tomato"},{"brand":"FAREEQ BIN AQOOL","cat":"egg","lines":[{"ingId":"i079","qty":4},{"ingId":"i095","qty":30}],"mode":"mult","name":"Egg Fried","order":7,"sizes":[{"bag":"i124","breadId":"i123","breadQty":1,"container":"i115","mult":1,"name":"Small","other":0,"price":0.9,"priceT":1.2,"spoonId":"i113","spoonQty":1},{"bag":"i125","breadId":"i123","breadQty":2,"container":"i116","mult":2,"name":"Medium","other":0,"price":1.7,"priceT":2.2,"spoonId":"i113","spoonQty":2},{"bag":"i126","breadId":"i123","breadQty":4,"container":"i117","mult":4,"name":"Large","other":0,"price":3.3,"priceT":3.8,"spoonId":"i113","spoonQty":3}],"targetPct":30,"id":"egg-fried"},{"brand":"FAREEQ BIN AQOOL","cat":"egg","lines":[{"ingId":"i084","qty":190},{"ingId":"i079","qty":2},{"ingId":"i112","qty":10},{"ingId":"i106","qty":15},{"ingId":"i095","qty":30},{"ingId":"i019","qty":60},{"ingId":"i024","qty":120},{"ingId":"i002","qty":1},{"ingId":"i011","qty":10},{"ingId":"i052","qty":1.25},{"ingId":"i061","qty":1.25},{"ingId":"i046","qty":1.25},{"ingId":"i062","qty":2.5},{"ingId":"i044","qty":1.25},{"ingId":"i059","qty":2.5}],"mode":"mult","name":"Egg & Fasolya","order":9,"sizes":[{"bag":"i124","breadId":"i123","breadQty":1,"container":"i115","mult":1,"name":"Small","other":0,"price":1.6,"priceT":2,"spoonId":"i113","spoonQty":1},{"bag":"i125","breadId":"i123","breadQty":2,"container":"i116","mult":2,"name":"Medium","other":0,"price":3,"priceT":3.6,"spoonId":"i113","spoonQty":2},{"bag":"i126","breadId":"i123","breadQty":4,"container":"i117","mult":4,"name":"Large","other":0,"price":5.6,"priceT":6.8,"spoonId":"i113","spoonQty":3}],"targetPct":30,"id":"egg-fasolya"},{"brand":"FAREEQ BIN AQOOL","cat":"main","lines":[{"ingId":"i063","qty":1000},{"ingId":"i016","qty":50},{"ingId":"i017","qty":15},{"ingId":"i019","qty":240},{"ingId":"i011","qty":90},{"ingId":"i024","qty":720},{"ingId":"i010","qty":15},{"ingId":"i002","qty":5},{"ingId":"i095","qty":180},{"ingId":"i059","qty":10},{"ingId":"i046","qty":15},{"ingId":"i040","qty":10},{"ingId":"i062","qty":15},{"ingId":"i052","qty":15}],"mode":"div","name":"Beef Liver","order":13,"sizes":[{"bag":"i124","breadId":"i123","breadQty":0.667,"container":"i115","mult":5,"name":"Small","other":0,"price":1.8,"priceT":2.2,"spoonId":"i113","spoonQty":1},{"bag":"i125","breadId":"i123","breadQty":2,"container":"i116","mult":2.5,"name":"Medium","other":0,"price":3.4,"priceT":4,"spoonId":"i113","spoonQty":2},{"bag":"i126","breadId":"i123","breadQty":4,"container":"i117","mult":1.5,"name":"Large","other":0,"price":6.2,"priceT":7.5,"spoonId":"i113","spoonQty":3}],"targetPct":30,"id":"beef-liver"},{"brand":"FAREEQ BIN AQOOL","cat":"sweet","lines":[{"ingId":"i081","qty":400},{"ingId":"i093","qty":30},{"ingId":"i049","qty":2.5},{"ingId":"i051","qty":2.5},{"ingId":"i037","qty":240}],"mode":"div","name":"Aseeda","order":0,"sizes":[{"bag":"i127","breadId":"i123","breadQty":0,"container":"i114","mult":5,"name":"Single","other":0,"price":0.4,"priceT":0.4,"spoonId":"i113","spoonQty":1},{"bag":"i124","breadId":"i123","breadQty":0,"container":"i115","mult":3,"name":"Small","other":0,"price":0.7,"priceT":1,"spoonId":"i113","spoonQty":2},{"bag":"i125","breadId":"i123","breadQty":0,"container":"i116","mult":2,"name":"Medium","other":0,"price":1,"priceT":1.5,"spoonId":"i113","spoonQty":3},{"bag":"i126","breadId":"i123","breadQty":0,"container":"i117","mult":1,"name":"Large","other":0,"price":1.9,"priceT":2.5,"spoonId":"i113","spoonQty":4}],"targetPct":30,"id":"asseda"},{"brand":"FAREEQ BIN AQOOL","cat":"egg","lines":[{"ingId":"i079","qty":2},{"ingId":"i095","qty":15},{"ingId":"i109","qty":15},{"ingId":"i019","qty":60},{"ingId":"i022","qty":30},{"ingId":"i011","qty":15},{"ingId":"i002","qty":2},{"ingId":"i024","qty":120},{"ingId":"i052","qty":1.2},{"ingId":"i046","qty":1.2},{"ingId":"i062","qty":1.2},{"ingId":"i061","qty":1.2},{"ingId":"i044","qty":1.2},{"ingId":"i059","qty":2.5}],"mode":"mult","name":"Egg Vegatable","order":4,"sizes":[{"bag":"i124","breadId":"i123","breadQty":1,"container":"i115","mult":1,"name":"Small","other":0,"price":1.2,"priceT":1.6,"spoonId":"i113","spoonQty":1},{"bag":"i125","breadId":"i123","breadQty":2,"container":"i116","mult":2,"name":"Medium","other":0,"price":2.2,"priceT":2.8,"spoonId":"i113","spoonQty":2},{"bag":"i126","breadId":"i123","breadQty":4,"container":"i117","mult":4,"name":"Large","other":0,"price":4.2,"priceT":5,"spoonId":"i113","spoonQty":3}],"targetPct":30,"id":"egg-vegatable"},{"brand":"FAREEQ BIN AQOOL","cat":"egg","lines":[{"ingId":"i078","qty":190},{"ingId":"i112","qty":20},{"ingId":"i106","qty":15},{"ingId":"i095","qty":30},{"ingId":"i019","qty":60},{"ingId":"i109","qty":120},{"ingId":"i002","qty":1},{"ingId":"i011","qty":10},{"ingId":"i052","qty":1.25},{"ingId":"i061","qty":1.25},{"ingId":"i046","qty":1.25},{"ingId":"i062","qty":2.5},{"ingId":"i044","qty":1.25},{"ingId":"i059","qty":2.5}],"mode":"mult","name":"Fool & Cheese","order":0,"sizes":[{"bag":"i124","breadId":"i123","breadQty":1,"container":"i115","mult":1,"name":"Small","other":0,"price":1.5,"priceT":1.9,"spoonId":"i113","spoonQty":1},{"bag":"i125","breadId":"i123","breadQty":2,"container":"i116","mult":2,"name":"Medium","other":0,"price":2.8,"priceT":3.4,"spoonId":"i113","spoonQty":2},{"bag":"i126","breadId":"i123","breadQty":4,"container":"i117","mult":4,"name":"Large","other":0,"price":5.4,"priceT":6.4,"spoonId":"i113","spoonQty":3}],"targetPct":25,"id":"fool-cheese"},{"brand":"FAREEQ BIN AQOOL","cat":"main","lines":[{"ingId":"i067","qty":1000},{"ingId":"i027","qty":150},{"ingId":"i028","qty":250},{"ingId":"i032","qty":250},{"ingId":"i022","qty":500},{"ingId":"i019","qty":200},{"ingId":"i024","qty":400},{"ingId":"i002","qty":30},{"ingId":"i013","qty":7.5},{"ingId":"i010","qty":7.5},{"ingId":"i018","qty":0},{"ingId":"i017","qty":25},{"ingId":"i014","qty":5},{"ingId":"i016","qty":60},{"ingId":"i003","qty":0},{"ingId":"i109","qty":60},{"ingId":"i095","qty":300},{"ingId":"i091","qty":1},{"ingId":"i061","qty":12},{"ingId":"i046","qty":12},{"ingId":"i062","qty":7.5},{"ingId":"i044","qty":0},{"ingId":"i042","qty":0},{"ingId":"i057","qty":0},{"ingId":"i040","qty":5},{"ingId":"i052","qty":7.5},{"ingId":"i043","qty":7.5},{"ingId":"i059","qty":15}],"mode":"div","name":"Nashif Chicken","order":16,"sizes":[{"bag":"i124","breadId":"i123","breadQty":1,"container":"i115","mult":8,"name":"Small","other":0,"price":1.8,"priceT":2.2,"spoonId":"i113","spoonQty":1},{"bag":"i125","breadId":"i123","breadQty":2,"container":"i116","mult":4,"name":"Medium","other":0,"price":3.4,"priceT":4,"spoonId":"i113","spoonQty":2},{"bag":"i126","breadId":"i123","breadQty":4,"container":"i117","mult":1.5,"name":"Large","other":0,"price":6.6,"priceT":7.6,"spoonId":"i113","spoonQty":3}],"targetPct":30,"id":"nashif-chicken"},{"brand":"FAREEQ BIN AQOOL","cat":"egg","lines":[{"ingId":"i078","qty":190},{"ingId":"i112","qty":10},{"ingId":"i106","qty":15},{"ingId":"i095","qty":30},{"ingId":"i019","qty":60},{"ingId":"i024","qty":120},{"ingId":"i002","qty":1},{"ingId":"i011","qty":10},{"ingId":"i052","qty":1.25},{"ingId":"i061","qty":1.25},{"ingId":"i046","qty":1.25},{"ingId":"i062","qty":2.5},{"ingId":"i044","qty":1.25},{"ingId":"i059","qty":2.5}],"mode":"mult","name":"Fool","order":11,"sizes":[{"bag":"i124","breadId":"i123","breadQty":1,"container":"i115","mult":1,"name":"Small","other":0,"price":1.4,"priceT":1.7,"spoonId":"i113","spoonQty":1},{"bag":"i125","breadId":"i123","breadQty":2,"container":"i116","mult":2,"name":"Medium","other":0,"price":2.6,"priceT":3,"spoonId":"i113","spoonQty":2},{"bag":"i126","breadId":"i123","breadQty":4,"container":"i117","mult":4,"name":"Large","other":0,"price":5,"priceT":5.6,"spoonId":"i113","spoonQty":3}],"targetPct":30,"id":"fool"},{"brand":"FAREEQ BIN AQOOL","cat":"egg","lines":[{"ingId":"i084","qty":190},{"ingId":"i112","qty":10},{"ingId":"i106","qty":15},{"ingId":"i095","qty":30},{"ingId":"i019","qty":60},{"ingId":"i024","qty":120},{"ingId":"i002","qty":1},{"ingId":"i011","qty":10},{"ingId":"i052","qty":1.25},{"ingId":"i061","qty":1.25},{"ingId":"i046","qty":1.25},{"ingId":"i062","qty":2.5},{"ingId":"i044","qty":1.25},{"ingId":"i059","qty":2.5}],"mode":"mult","name":"Fasolya","order":1,"sizes":[{"bag":"i124","breadId":"i123","breadQty":1,"container":"i115","mult":1,"name":"Small","other":0,"price":1.3,"priceT":1.7,"spoonId":"i113","spoonQty":1},{"bag":"i125","breadId":"i123","breadQty":2,"container":"i116","mult":2,"name":"Medium","other":0,"price":2.4,"priceT":3,"spoonId":"i113","spoonQty":2},{"bag":"i126","breadId":"i123","breadQty":4,"container":"i117","mult":4,"name":"Large","other":0,"price":4.6,"priceT":5.6,"spoonId":"i113","spoonQty":3}],"targetPct":30,"id":"fasolya"},{"brand":"FAREEQ BIN AQOOL","cat":"traditional","lines":[{"ingId":"i027","qty":1000},{"ingId":"i059","qty":45},{"ingId":"i075","qty":2.5},{"ingId":"i088","qty":1.25}],"mode":"div","name":"Nakhi","order":6,"sizes":[{"bag":"i127","breadId":"i123","breadQty":0,"container":"i114","mult":16,"name":"Single","other":0,"price":0.4,"priceT":0.4,"spoonId":"i113","spoonQty":1},{"bag":"i124","breadId":"i123","breadQty":0,"container":"i115","mult":11,"name":"Small","other":0,"price":0.6,"priceT":0.75,"spoonId":"i113","spoonQty":1},{"bag":"i125","breadId":"i123","breadQty":0,"container":"i116","mult":5,"name":"Medium","other":0,"price":1,"priceT":1.2,"spoonId":"i113","spoonQty":2},{"bag":"i126","breadId":"i123","breadQty":0,"container":"i117","mult":3,"name":"Large","other":0,"price":1.8,"priceT":2.2,"spoonId":"i113","spoonQty":3}],"targetPct":30,"id":"nakhi"},{"brand":"FAREEQ BIN AQOOL","cat":"main","lines":[{"ingId":"i071","qty":1000},{"ingId":"i019","qty":100},{"ingId":"i024","qty":400},{"ingId":"i022","qty":200},{"ingId":"i011","qty":100},{"ingId":"i004","qty":200},{"ingId":"i017","qty":4.5},{"ingId":"i012","qty":9},{"ingId":"i095","qty":70},{"ingId":"i109","qty":48},{"ingId":"i059","qty":6},{"ingId":"i128","qty":200},{"ingId":"i003","qty":0.2},{"ingId":"i061","qty":6},{"ingId":"i043","qty":4},{"ingId":"i046","qty":3},{"ingId":"i052","qty":3},{"ingId":"i062","qty":3},{"ingId":"i044","qty":3},{"ingId":"i057","qty":2},{"ingId":"i048","qty":5},{"ingId":"i042","qty":5}],"mode":"div","name":"Nashif Meat","order":17,"sizes":[{"bag":"i124","breadId":"i123","breadQty":0.967,"container":"i115","mult":6,"name":"Small","other":0,"price":2,"priceT":1.5,"spoonId":"i113","spoonQty":1.45},{"bag":"i125","breadId":"i123","breadQty":2,"container":"i116","mult":3,"name":"Medium","other":0,"price":3.8,"priceT":2.8,"spoonId":"i113","spoonQty":2.9},{"bag":"i126","breadId":"i123","breadQty":4,"container":"i117","mult":1.5,"name":"Large","other":0,"price":7,"priceT":5.4,"spoonId":"i113","spoonQty":6}],"targetPct":30,"id":"nashif-meat"},{"brand":"FAREEQ BIN AQOOL","cat":"traditional","lines":[{"ingId":"i071","qty":500},{"ingId":"i031","qty":1000},{"ingId":"i095","qty":250},{"ingId":"i109","qty":480},{"ingId":"i019","qty":300},{"ingId":"i014","qty":5},{"ingId":"i010","qty":15},{"ingId":"i024","qty":500},{"ingId":"i046","qty":15},{"ingId":"i052","qty":5},{"ingId":"i041","qty":2.5},{"ingId":"i049","qty":2.5},{"ingId":"i059","qty":30}],"mode":"div","name":"Jareesh","order":10,"sizes":[{"bag":"i124","breadId":"i123","breadQty":0,"container":"i115","mult":15,"name":"Small","other":0,"price":1,"priceT":1,"spoonId":"i113","spoonQty":1.45},{"bag":"i125","breadId":"i123","breadQty":0,"container":"i116","mult":8,"name":"Medium","other":0,"price":1.6,"priceT":1.6,"spoonId":"i113","spoonQty":4.5},{"bag":"i126","breadId":"i123","breadQty":0,"container":"i117","mult":3,"name":"Large","other":0,"price":2.9,"priceT":2.9,"spoonId":"i113","spoonQty":6}],"targetPct":30,"id":"jareesh"},{"brand":"FAREEQ BIN AQOOL","cat":"traditional","lines":[{"ingId":"i032","qty":1000},{"ingId":"i070","qty":150},{"ingId":"i019","qty":150},{"ingId":"i002","qty":45},{"ingId":"i008","qty":45},{"ingId":"i022","qty":350},{"ingId":"i014","qty":7.5},{"ingId":"i012","qty":15},{"ingId":"i024","qty":350},{"ingId":"i043","qty":5},{"ingId":"i095","qty":135},{"ingId":"i109","qty":20},{"ingId":"i046","qty":7.5},{"ingId":"i059","qty":15},{"ingId":"i061","qty":15},{"ingId":"i052","qty":10},{"ingId":"i062","qty":1.5}],"mode":"div","name":"Dall","order":7,"sizes":[{"bag":"i127","breadId":"i123","breadQty":0.5,"container":"i114","mult":17,"name":"Single","other":0,"price":0.6,"priceT":0.6,"spoonId":"i113","spoonQty":1},{"bag":"i124","breadId":"i123","breadQty":1,"container":"i115","mult":12,"name":"Small","other":0,"price":1,"priceT":1.35,"spoonId":"i113","spoonQty":1},{"bag":"i125","breadId":"i123","breadQty":2,"container":"i116","mult":8,"name":"Medium","other":0,"price":1.6,"priceT":2.2,"spoonId":"i113","spoonQty":2},{"bag":"i126","breadId":"i123","breadQty":4,"container":"i117","mult":4,"name":"Large","other":0,"price":2.9,"priceT":3.8,"spoonId":"i113","spoonQty":3}],"targetPct":30,"id":"dall"},{"brand":"FAREEQ BIN AQOOL","cat":"main","lines":[{"ingId":"i068","qty":450},{"ingId":"i014","qty":10},{"ingId":"i011","qty":45},{"ingId":"i022","qty":480},{"ingId":"i009","qty":240},{"ingId":"i024","qty":240},{"ingId":"i019","qty":180},{"ingId":"i095","qty":60},{"ingId":"i072","qty":30},{"ingId":"i106","qty":30},{"ingId":"i111","qty":30},{"ingId":"i096","qty":30},{"ingId":"i059","qty":15},{"ingId":"i052","qty":10},{"ingId":"i061","qty":5},{"ingId":"i062","qty":5},{"ingId":"i040","qty":2.5},{"ingId":"i044","qty":2.5},{"ingId":"i043","qty":2.5},{"ingId":"i046","qty":2.5}],"mode":"div","name":"Chicken Liver","order":14,"sizes":[{"bag":"i124","breadId":"i123","breadQty":0.667,"container":"i115","mult":2,"name":"Small","other":0,"price":2,"priceT":2.2,"spoonId":"i113","spoonQty":1},{"bag":"i125","breadId":"i123","breadQty":2,"container":"i116","mult":1,"name":"Medium","other":0,"price":3.6,"priceT":4,"spoonId":"i113","spoonQty":2},{"bag":"i125","breadId":"i123","breadQty":2,"container":"i117","mult":0.5,"name":"Large","other":0,"price":6.8,"priceT":7.5,"spoonId":"i113","spoonQty":3}],"targetPct":30,"id":"chicken-liver"},{"brand":"FAREEQ BIN AQOOL","cat":"main","lines":[{"ingId":"i071","qty":2000},{"ingId":"i019","qty":500},{"ingId":"i022","qty":1000},{"ingId":"i095","qty":300},{"ingId":"i109","qty":240},{"ingId":"i059","qty":15},{"ingId":"i085","qty":0},{"ingId":"i028","qty":0},{"ingId":"i042","qty":2},{"ingId":"i052","qty":15},{"ingId":"i046","qty":15},{"ingId":"i043","qty":15},{"ingId":"i062","qty":15},{"ingId":"i044","qty":15},{"ingId":"i061","qty":15}],"mode":"div","name":"Qeema Meat","order":15,"sizes":[{"bag":"i124","breadId":"i123","breadQty":0.667,"container":"i115","mult":12,"name":"Small","other":0,"price":2.5,"priceT":2.5,"spoonId":"i113","spoonQty":1},{"bag":"i125","breadId":"i123","breadQty":2,"container":"i116","mult":6,"name":"Medium","other":0,"price":3.2,"priceT":3.5,"spoonId":"i113","spoonQty":2},{"bag":"i126","breadId":"i123","breadQty":4,"container":"i117","mult":3,"name":"Large","other":0,"price":5.4,"priceT":6,"spoonId":"i113","spoonQty":3}],"targetPct":30,"id":"qemma-meat"},{"brand":"FAREEQ BIN AQOOL","cat":"egg","lines":[{"ingId":"i079","qty":4},{"ingId":"i112","qty":60},{"ingId":"i095","qty":15}],"mode":"mult","name":"Egg Cheese","order":6,"sizes":[{"bag":"i124","breadId":"i123","breadQty":1,"container":"i115","mult":1,"name":"Small","other":0,"price":1.3,"priceT":1.7,"spoonId":"i113","spoonQty":1},{"bag":"i125","breadId":"i123","breadQty":2,"container":"i116","mult":2,"name":"Medium","other":0,"price":2.4,"priceT":3,"spoonId":"i113","spoonQty":2},{"bag":"i126","breadId":"i123","breadQty":4,"container":"i117","mult":4,"name":"Large","other":0,"price":4.6,"priceT":5.6,"spoonId":"i113","spoonQty":3}],"targetPct":30,"id":"egg-cheese"},{"brand":"FAREEQ BIN AQOOL","cat":"sweet","lines":[{"ingId":"i074","qty":500},{"ingId":"i037","qty":240},{"ingId":"i100","qty":30},{"ingId":"i079","qty":10},{"ingId":"i051","qty":30}],"mode":"div","name":"Balaleet","order":2,"sizes":[{"bag":"i124","breadId":"i123","breadQty":0,"container":"i115","mult":6,"name":"Small","other":0,"price":1,"priceT":null,"spoonId":"i113","spoonQty":1},{"bag":"i125","breadId":"i123","breadQty":0,"container":"i116","mult":4,"name":"Medium","other":0,"price":1.6,"priceT":2,"spoonId":"i113","spoonQty":2},{"bag":"i126","breadId":"i123","breadQty":0,"container":"i117","mult":2,"name":"Large","other":0,"price":3,"priceT":null,"spoonId":"i113","spoonQty":3}],"targetPct":30,"id":"balaleet"}]};
+
+const $=s=>document.querySelector(s);
+const clone=o=>JSON.parse(JSON.stringify(o));
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const n=v=>{const x=parseFloat(v);return isFinite(x)?x:0};
+const bhd=v=>n(v).toFixed(3);
+const u6=v=>{const x=n(v);return x===0?'0':x<0.01?x.toFixed(6):x.toFixed(4)};
+const uid=p=>p+'-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+let ings={},recs={},db=null,mode='loading',readOnly=false,selId=null,brand='all',tab='sum',confirmDel=false,loaded={i:false,r:false},priceQ='',flashId=null;
+function loadSeed(){ings={};recs={};if(!SEED)return;SEED.ings.forEach(o=>ings[o.id]=clone(o));SEED.recs.forEach(o=>recs[o.id]=clone(o));}
+
+// ---- math ----
+const uc=i=>i&&n(i.qty)>0?n(i.price)/n(i.qty):0;
+const lineCost=l=>uc(ings[l.ingId])*n(l.qty);
+const baseCost=r=>(r.lines||[]).reduce((s,l)=>s+lineCost(l),0);
+function sizeCalc(r,s,base){
+  const cont=uc(ings[s.container]), spoon=n(s.spoonQty)*uc(ings[s.spoonId]), bread=n(s.breadQty)*uc(ings[s.breadId]), bag=uc(ings[s.bag]);
+  const other=n(s.other), pack=cont+spoon+bread+bag+other;
+  const food=r.mode==='div'?(n(s.mult)>0?base/n(s.mult):0):base*n(s.mult);
+  const total=food+pack, price=n(s.price), priceT=s.priceT==null||s.priceT===''?null:n(s.priceT), target=n(r.targetPct)||30;
+  const stOf=p=>p==null?'none':p<=target?'good':p<=target+5?'warn':'bad';
+  const pct=price>0?total/price*100:null, pctT=priceT>0?total/priceT*100:null;
+  const sugg=target>0?Math.ceil(total/(target/100)*20-1e-9)/20:0;
+  return {cont,spoon,bread,bag,other,pack,food,total,price,priceT,pct,pctT,st:stOf(pct),stT:stOf(pctT),target,sugg,profit:price-total,profitT:priceT==null?null:priceT-total};
+}
+const calcAll=r=>{const b=baseCost(r);return {base:b,sizes:(r.sizes||[]).map(s=>sizeCalc(r,s,b))}};
+const pctTxt=p=>p==null?'—':p.toFixed(1)+'%';
+
+// ---- store sync ----
+const timers={},dirty={},writing={},again={};
+function queue(coll,id){
+  if(mode!=='live'||readOnly) return;
+  const k=coll+'/'+id; dirty[k]=true; clearTimeout(timers[k]);
+  timers[k]=setTimeout(()=>{delete timers[k];flush(coll,id)},600);
+}
+async function flush(coll,id){
+  const k=coll+'/'+id;
+  if(writing[k]){again[k]=true;return}
+  const o=(coll==='recipes'?recs:ings)[id];
+  if(!o){delete dirty[k];return}
+  const body=clone(o); delete body.id;
+  writing[k]=true;
+  try{ await db.collection(coll).doc(id).set(body); }catch(e){ handleErr(e); }
+  writing[k]=false;
+  if(again[k]){again[k]=false;flush(coll,id)} else if(!timers[k]) delete dirty[k];
+}
+async function remove(coll,id){
+  const k=coll+'/'+id; clearTimeout(timers[k]); delete timers[k]; delete dirty[k];
+  if(mode!=='live'||readOnly) return;
+  try{ await db.collection(coll).doc(id).delete(); }catch(e){ handleErr(e); }
+}
+function handleErr(e){
+  const c=e&&e.code;
+  if(c==='invalid_argument'||c==='not_granted'||c==='revoked'){ readOnly=true; renderAll(); toast('You do not have permission to edit this data.'); }
+  else if(c==='quota_exceeded') toast('Storage is full. Delete unused items or dishes.');
+  else toast('Could not save. Check your connection and try again.');
+}
+function mergeSnap(coll,snap){
+  const src=coll==='recipes'?recs:ings, next={};
+  snap.docs.forEach(d=>{const k=coll+'/'+d.id; next[d.id]=(dirty[k]&&src[d.id])?src[d.id]:Object.assign({id:d.id},clone(d.data()));});
+  for(const id in src) if(dirty[coll+'/'+id]&&!next[id]) next[id]=src[id];
+  if(coll==='recipes') recs=next; else ings=next;
+}
+
+// ---- helpers ----
+let toastT;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,3400)}
+function setBanner(){
+  const b=$('#banner');
+  if(mode==='loading'){b.className='banner';b.textContent='Loading data…';return}
+  if(mode==='demo'){b.className='banner warn';b.textContent='Offline copy with the data as of 27 Sep 2026. You can browse and try changes, but nothing is saved.';return}
+  if(readOnly){b.className='banner warn';b.textContent='Read-only: you can view costs but not edit them.';return}
+  b.className='banner';b.textContent='Data is shared with your team and saves automatically. Prices exclude VAT.';
+}
+const dis=()=>readOnly?' disabled':'';
+const rci=c=>{const i=RCATS.findIndex(x=>x[0]===c);return i<0?99:i};
+const sortedRecs=()=>Object.values(recs).sort((a,b)=>rci(a.cat)-rci(b.cat)||n(a.order)-n(b.order));
+const visibleRecs=()=>sortedRecs().filter(r=>brand==='all'||r.cat===brand);
+const sortedIngs=()=>Object.values(ings).sort((a,b)=>CATS.findIndex(c=>c[0]===a.cat)-CATS.findIndex(c=>c[0]===b.cat)||n(a.order)-n(b.order));
+const isField=el=>el&&/^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName);
+const usedIn=id=>Object.values(recs).filter(r=>(r.lines||[]).some(l=>l.ingId===id)||(r.sizes||[]).some(s=>[s.container,s.bag,s.spoonId,s.breadId].includes(id))).length;
+function ingOptions(sel,filterCat){
+  return CATS.filter(([k])=>!filterCat||k===filterCat).map(([k,t])=>{
+    const items=sortedIngs().filter(i=>i.cat===k); if(!items.length) return '';
+    return `<optgroup label="${t}">`+items.map(i=>`<option value="${esc(i.id)}"${i.id===sel?' selected':''}>${esc(i.name)}</option>`).join('')+'</optgroup>';
+  }).join('')+(sel&&!ings[sel]?`<option value="${esc(sel)}" selected>(deleted item)</option>`:'');
+}
+
+// ---- render: summary ----
+function renderChips(){
+  $('#brandChips').innerHTML=[['all','All dishes'],...RCATS].map(([v,t])=>`<button class="chip" data-brand="${esc(v)}" aria-pressed="${brand===v}">${esc(t)}</button>`).join('');
+  $('#brandBar').hidden=tab==='prices'||tab==='io';
+  $('#newDish').disabled=readOnly; $('#newIng').disabled=readOnly;
+}
+function sizeNames(rs){const names=[];rs.forEach(r=>(r.sizes||[]).forEach(s=>{if(!names.includes(s.name))names.push(s.name)}));const k=x=>{const i=SIZE_ORDER.indexOf(x);return i<0?99:i};return names.sort((a,b)=>k(a)-k(b))}
+function renderSummary(){
+  const rs=visibleRecs(); const cs=rs.flatMap(r=>calcAll(r).sizes);
+  const st=cs.filter(c=>c.pct!=null), dt=cs.filter(c=>c.pctT!=null);
+  const avg=st.length?st.reduce((s,c)=>s+c.pct,0)/st.length:null, avgT=dt.length?dt.reduce((s,c)=>s+c.pctT,0)/dt.length:null;
+  const over=st.filter(c=>c.st!=='good').length+dt.filter(c=>c.stT!=='good').length;
+  $('#stats').innerHTML=
+    `<div class="stat"><div class="k">Dishes</div><div class="v num">${rs.length}</div></div>`+
+    `<div class="stat"><div class="k">Average cost · store</div><div class="v num">${pctTxt(avg)}</div></div>`+
+    `<div class="stat"><div class="k">Average cost · delivery</div><div class="v num">${pctTxt(avgT)}</div></div>`+
+    `<div class="stat"><div class="k">Prices above target cost (30%)</div><div class="v" style="color:${over?'var(--bad)':'var(--good)'}"><span class="num">${over}</span> <small>of ${st.length+dt.length} prices (store + delivery)</small></div></div>`;
+  const names=sizeNames(rs);
+  if(!rs.length){$('#sumTable').innerHTML=`<tbody><tr><td class="hint" style="padding:16px">No dishes yet.</td></tr></tbody>`;return}
+  const ncol=1+names.length*5;
+  const row=r=>{const c=calcAll(r);return `<tr data-id="${esc(r.id)}"><td><b>${esc(r.name)}</b></td>${names.map(nm=>{const i=(r.sizes||[]).findIndex(s=>s.name===nm);const z=szc(nm);if(i<0)return `<td class="c hint sep ${z}">—</td><td class="${z}"></td><td class="${z}"></td><td class="${z}"></td><td class="${z}"></td>`;const s=c.sizes[i];
+    return `<td class="c num sep ${z}">${bhd(s.total)}</td><td class="c num ${z}">${bhd(s.price)}</td><td class="c ${z}"><span class="pill ${s.st}">${pctTxt(s.pct)}</span></td><td class="c num ${z}">${s.priceT==null?'—':bhd(s.priceT)}</td><td class="c ${z}">${s.priceT==null?'':`<span class="pill ${s.stT}">${pctTxt(s.pctT)}</span>`}</td>`}).join('')}</tr>`};
+  const groups=RCATS.map(([k,t])=>({t,rs:rs.filter(r=>r.cat===k)})).concat([{t:'Other',rs:rs.filter(r=>rci(r.cat)===99)}]).filter(g=>g.rs.length);
+  $('#sumTable').innerHTML=`<thead><tr><th rowspan="2">Dish</th>${names.map(nm=>`<th class="c sep szh ${szc(nm)}" colspan="5" style="text-align:center">${esc(nm)}</th>`).join('')}</tr>
+    <tr>${names.map(nm=>{const z=szc(nm);return `<th class="c sep ${z}">Cost</th><th class="c ${z}">Store price</th><th class="c ${z}">Cost %</th><th class="c ${z}">Delivery price</th><th class="c ${z}">Cost %</th>`}).join('')}</tr></thead>
+    <tbody>${groups.map(g=>`<tr class="cat"><td colspan="${ncol}">${g.t}</td></tr>`+g.rs.map(row).join('')).join('')}</tbody>`;
+}
+
+// ---- render: dishes ----
+function renderList(){
+  const rs=visibleRecs();
+  $('#dishCount').textContent=rs.length+(rs.length===1?' dish':' dishes');
+  if(!rs.length){$('#dishList').innerHTML=`<div class="empty">No dishes here yet. Click “New dish”.</div>`;return}
+  $('#dishList').innerHTML=rs.map(r=>{const c=calcAll(r);return `<button class="dish${r.id===selId?' is-sel':''}" data-id="${esc(r.id)}">
+    <span class="dish-head">${r.photo?`<img class="thumb" src="/_blob/${esc(r.photo)}" alt="" loading="lazy">`:''}<span class="dish-name">${esc(r.name||'Untitled dish')}</span></span><span class="dish-brand">${esc((RCATS.find(x=>x[0]===r.cat)||[,''])[1])}</span>
+    <span class="pills"><span class="hint">Store</span>${(r.sizes||[]).map((s,i)=>`<span class="pill ${c.sizes[i].st} szp ${szc(s.name,i)}" title="${esc(s.name)}">${pctTxt(c.sizes[i].pct)}</span>`).join('')}</span>
+    <span class="pills"><span class="hint">Delivery</span>${(r.sizes||[]).map((s,i)=>`<span class="pill ${c.sizes[i].stT} szp ${szc(s.name,i)}" title="${esc(s.name)}">${pctTxt(c.sizes[i].pctT)}</span>`).join('')}</span></button>`}).join('');
+}
+function zeroNote(r){
+  const z=[...new Set((r.lines||[]).map(l=>ings[l.ingId]).filter(i=>i&&!(n(i.price)>0)).map(i=>i.name))];
+  return z.length?`<div class="banner warn">Items with no price in the price list, so the cost is understated: ${z.map(esc).join(', ')}</div>`:'';
+}
+let assetsNs=null, photoDelArm=false, photoBusy=false;
+function photoBlock(r){
+  const can=!!assetsNs&&!readOnly&&mode==='live';
+  if(!r.photo&&!can) return '';
+  const img=r.photo?`<img src="/_blob/${esc(r.photo)}" alt="Photo of ${esc(r.name)}">`:`<div class="ph">No photo</div>`;
+  const acts=can?`<div class="photo-actions"><button class="btn ghost sm" id="photoBtn"${photoBusy?' disabled':''}>${photoBusy?'Uploading…':r.photo?'Change photo':'Upload photo'}</button>${r.photo?`<button class="btn link sm" id="photoDel">${photoDelArm?'Click again to delete the photo':'Delete photo'}</button>`:''}</div>`:'';
+  return `<div class="photo">${img}${acts}</div>`;
+}
+function shrink(file){return new Promise(res=>{const img=new Image();const u=URL.createObjectURL(file);img.onload=()=>{const k=Math.min(1,1200/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(b=>res(b||file),'image/jpeg',0.85)};img.onerror=()=>{URL.revokeObjectURL(u);res(file)};img.src=u})}
+async function uploadPhoto(file){
+  const r=recs[selId]; if(!r||!assetsNs) return;
+  photoBusy=true; renderDetail();
+  try{ const blob=await shrink(file); const res=await assetsNs.upload(blob,{type:blob.type||'image/jpeg'});
+    const old=r.photo; r.photo=res.id; queue('recipes',r.id); if(old){try{await assetsNs.delete(old)}catch(e){}} toast('Photo saved.');
+  }catch(e){ toast(e&&e.code==='too_large'?'The photo is too large.':e&&e.code==='quota_exceeded'?'Photo storage is full.':'Could not upload the photo.'); }
+  photoBusy=false; renderDetail(); renderList(); $('#photoFile').value='';
+}
+function renderDetail(){
+  const el=$('#detail'), r=recs[selId];
+  if(!r){el.innerHTML=`<div class="empty">Pick a dish from the list to see its cost breakdown.</div>`;return}
+  const lines=r.lines||[], sizes=r.sizes||[];
+  let sn=0; const groups=CATS.map(([k,t])=>{const idx=lines.map((l,i)=>i).filter(i=>(ings[lines[i].ingId]||{}).cat===k);return {t,idx}}).filter(g=>g.idx.length);
+  const orphan=lines.map((l,i)=>i).filter(i=>!ings[lines[i].ingId]); if(orphan.length) groups.push({t:'Items deleted from the list',idx:orphan});
+  const lineRow=i=>{const l=lines[i],ing=ings[l.ingId];sn++;return `<tr>
+    <td class="sn num">${sn}</td>
+    <td><select class="in l-ing" data-i="${i}" aria-label="Item"${dis()}>${ingOptions(l.ingId)}</select></td>
+    <td class="c"><input class="in l-qty" type="number" min="0" step="any" data-i="${i}" value="${n(l.qty)}" style="width:86px" aria-label="Qty"${dis()}></td>
+    <td class="unit">${ing?UNITS[ing.unit]||ing.unit:''}</td>
+    <td class="c">${ing?`<button class="goto num" data-goto="${esc(ing.id)}" title="Edit the price in the price list">${u6(uc(ing))}</button>`:''}</td>
+    <td class="c num l-cost" data-i="${i}"></td>
+    <td><button class="x l-del" data-i="${i}" aria-label="Remove line"${dis()}>×</button></td></tr>`};
+  const sc=(label,fn,cls='')=>`<tr class="${cls}"><td class="rl">${label}</td>${sizes.map((s,j)=>`<td class="c ${szc(s.name,j)}">${fn(s,j)}</td>`).join('')}</tr>`;
+  el.innerHTML=`
+    ${photoBlock(r)}
+    <input class="name-in" id="d-name" value="${esc(r.name)}" aria-label="Dish name"${dis()}>
+    ${zeroNote(r)}
+    <div class="fields">
+      <div class="field"><label for="d-cat">Section</label><select class="in" id="d-cat"${dis()}>${RCATS.map(([k,t])=>`<option value="${k}"${k===r.cat?' selected':''}>${t}</option>`).join('')}</select></div>
+      <div class="field"><label for="d-mode">Size calculation</label><select class="in" id="d-mode"${dis()}><option value="div"${r.mode==='div'?' selected':''}>One recipe fills several containers</option><option value="mult"${r.mode!=='div'?' selected':''}>One container takes several recipes</option></select></div>
+      <div class="field"><label for="d-brand">Brand</label><select class="in" id="d-brand"${dis()}>${BRANDS.map(b=>`<option${b===r.brand?' selected':''}>${esc(b)}</option>`).join('')}</select></div>
+      <div class="field"><label for="d-target">Target cost %</label><input class="in" type="number" min="1" max="100" step="1" id="d-target" value="${n(r.targetPct)||30}"${dis()}></div>
+      <div class="field"><span class="lbl">Base recipe cost</span><span style="font-size:20px;font-weight:600"><span class="num" id="c-base"></span> <span class="hint">BHD</span></span></div>
+    </div>
+    <div class="sec-h"><h3>Recipe ingredients</h3><span class="hint">Unit prices come from the price list. Click one to edit it there.</span></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>#</th><th>Item</th><th class="c">Qty</th><th>Unit</th><th class="c">Unit price</th><th class="c">Cost</th><th></th></tr></thead>
+      <tbody>${groups.map(g=>`<tr class="cat"><td colspan="7">${g.t}</td></tr>`+g.idx.map(lineRow).join('')).join('')||`<tr><td colspan="7" class="hint" style="padding:14px">No ingredients yet.</td></tr>`}</tbody>
+      <tfoot><tr><td colspan="5">Total recipe cost</td><td class="c num" id="c-base2"></td><td></td></tr></tfoot>
+    </table></div>
+    <div><button class="btn ghost sm" id="addLine"${dis()}>+ Add item</button></div>
+
+    <div class="sec-h"><h3>Sizes, packaging and price</h3><button class="btn ghost sm" id="addSize"${dis()}>+ Size</button></div>
+    <div class="tbl-wrap"><table class="sizes">
+      <thead><tr><th></th>${sizes.map((s,j)=>`<th class="c szh ${szc(s.name,j)}"><input class="in s-f" data-j="${j}" data-f="name" value="${esc(s.name)}" aria-label="Size name" style="font-weight:600"${dis()}></th>`).join('')}</tr></thead>
+      <tbody>
+        ${sc(r.mode==='div'?'Containers per recipe':'Recipes per container',(s,j)=>`<input class="in s-f" type="number" min="0" step="any" data-j="${j}" data-f="mult" value="${n(s.mult)}" aria-label="Units"${dis()}>`)}
+        ${sc('Ingredient cost',(s,j)=>`<span class="num" data-k="food" data-j="${j}"></span>`)}
+        ${sc('Container',(s,j)=>`<select class="in s-f" data-j="${j}" data-f="container" aria-label="Container"${dis()}>${ingOptions(s.container,'packaging')}</select>`)}
+        ${sc('Container cost',(s,j)=>`<span class="num" data-k="cont" data-j="${j}"></span>`)}
+        ${sc('Spoons (qty)',(s,j)=>`<input class="in s-f" type="number" min="0" step="any" data-j="${j}" data-f="spoonQty" value="${n(s.spoonQty)}" aria-label="Spoons"${dis()}>`)}
+        ${sc('Bread (qty)',(s,j)=>`<input class="in s-f" type="number" min="0" step="any" data-j="${j}" data-f="breadQty" value="${n(s.breadQty)}" aria-label="Bread"${dis()}>`)}
+        ${sc('Bag',(s,j)=>`<select class="in s-f" data-j="${j}" data-f="bag" aria-label="Bag"${dis()}><option value="">None</option>${ingOptions(s.bag,'packaging')}</select>`)}
+        ${sc('Other costs (BHD)',(s,j)=>`<input class="in s-f" type="number" min="0" step="0.001" data-j="${j}" data-f="other" value="${n(s.other)}" aria-label="Other costs"${dis()}>`)}
+        ${sc('Packaging total',(s,j)=>`<span class="num" data-k="pack" data-j="${j}"></span>`)}
+        ${sc('Total cost',(s,j)=>`<span class="num" data-k="total" data-j="${j}"></span>`,'strong')}
+        ${sc('Store price (BHD)',(s,j)=>`<input class="in s-f" type="number" min="0" step="0.050" data-j="${j}" data-f="price" value="${n(s.price)}" aria-label="Store price"${dis()}>`)}
+        ${sc('Cost % · store',(s,j)=>`<span class="pill" data-k="pct" data-j="${j}"></span>`,'strong')}
+        ${sc('Profit · store',(s,j)=>`<span class="num" data-k="profit" data-j="${j}"></span>`)}
+        ${sc('Delivery price (BHD)',(s,j)=>`<input class="in s-f" type="number" min="0" step="0.050" data-j="${j}" data-f="priceT" value="${s.priceT==null?'':n(s.priceT)}" placeholder="—" aria-label="Delivery price"${dis()}>`)}
+        ${sc('Cost % · delivery',(s,j)=>`<span class="pill" data-k="pctT" data-j="${j}"></span>`,'strong')}
+        ${sc('Profit · delivery',(s,j)=>`<span class="num" data-k="profitT" data-j="${j}"></span>`)}
+        ${sc('Suggested price at target',(s,j)=>`<span class="num" data-k="sugg" data-j="${j}"></span>`)}
+        ${sizes.length>0&&!readOnly?sc('',(s,j)=>`<button class="btn link sm s-del" data-j="${j}">Remove size</button>`):''}
+      </tbody>
+    </table></div>
+    <div class="row-actions">
+      <span class="hint">All prices exclude 10% VAT. Delivery app commission is not included in the cost.</span>
+      ${confirmDel?`<div class="confirm">Delete “${esc(r.name)}” permanently? <button class="btn danger" id="delYes">Delete</button><button class="btn link" id="delNo">Cancel</button></div>`:`<button class="btn link" id="delDish"${dis()}>Delete dish</button>`}
+    </div>`;
+  updateComputed();
+}
+function updateComputed(){
+  const r=recs[selId]; if(!r||!$('#c-base')) return;
+  const c=calcAll(r);
+  $('#c-base').textContent=bhd(c.base); $('#c-base2').textContent=bhd(c.base);
+  document.querySelectorAll('#detail .l-cost').forEach(td=>{const l=(r.lines||[])[+td.dataset.i];td.textContent=l?bhd(lineCost(l)):''});
+  document.querySelectorAll('#detail [data-k]').forEach(el=>{const s=c.sizes[+el.dataset.j];if(!s)return;const k=el.dataset.k;
+    if(k==='pct'){el.textContent=pctTxt(s.pct);el.className='pill '+s.st}
+    else if(k==='pctT'){el.textContent=pctTxt(s.pctT);el.className='pill '+s.stT}
+    else if(k==='profitT'){el.textContent=s.profitT==null?'—':bhd(s.profitT);el.style.color=s.profitT<0?'var(--bad)':''}
+    else if(k==='sugg'){el.textContent=s.total>0?bhd(s.sugg):'—'}
+    else {el.textContent=bhd(s[k]); if(k==='profit') el.style.color=s.profit<0?'var(--bad)':''}
+  });
+}
+
+// ---- render: price list ----
+function renderPrices(){
+  const q=priceQ.trim().toLowerCase();
+  const rows=sortedIngs().filter(i=>!q||String(i.name).toLowerCase().includes(q));
+  let sn=0;
+  $('#priceBody').innerHTML=CATS.map(([k,t])=>{const items=rows.filter(i=>i.cat===k);if(!items.length)return '';
+    return `<tr class="cat"><td colspan="12">${t}</td></tr>`+items.map(i=>{sn++;const u=usedIn(i.id);return `<tr data-id="${esc(i.id)}"${i.id===flashId?' class="flash"':''}>
+      <td class="sn num">${sn}</td>
+      <td class="nm"><input class="in" data-f="name" value="${esc(i.name)}" aria-label="Item name"${dis()}>${n(i.price)>0?'':' <span class="pill bad">No price</span>'}</td>
+      <td><select class="in" data-f="cat" aria-label="Category"${dis()}>${CATS.map(([ck,ct])=>`<option value="${ck}"${ck===i.cat?' selected':''}>${ct}</option>`).join('')}</select></td>
+      <td class="c"><input class="in" type="number" min="0" step="0.001" data-f="price" value="${n(i.price)}" aria-label="Price"${dis()}></td>
+      <td class="c"><input class="in" type="number" min="0" step="any" data-f="qty" value="${n(i.qty)}" aria-label="Qty"${dis()}></td>
+      <td><select class="in" data-f="unit" aria-label="Unit"${dis()}>${Object.entries(UNITS).map(([uk,ut])=>`<option value="${uk}"${uk===i.unit?' selected':''}>${ut}</option>`).join('')}</select></td>
+      <td class="c num p-uc"></td>
+      <td class="c"><input class="in" type="number" min="0" step="0.001" data-f="oldPrice" value="${i.oldPrice==null?'':n(i.oldPrice)}" aria-label="Previous price"${dis()}></td>
+      <td class="c num p-diff"></td>
+      <td class="c"><input class="in" type="number" min="0" step="0.001" data-f="marketPrice" value="${i.marketPrice==null?'':n(i.marketPrice)}" aria-label="Market price"${dis()}></td>
+      <td class="hint">${u?u+(u===1?' dish':' dishes'):'—'}</td>
+      <td><button class="x p-del" aria-label="Delete item"${dis()}>×</button></td></tr>`}).join('')}).join('')||`<tr><td colspan="12" class="hint" style="padding:14px">No results.</td></tr>`;
+  updatePriceComputed();
+}
+function updatePriceComputed(){
+  document.querySelectorAll('#priceBody tr[data-id]').forEach(tr=>{const i=ings[tr.dataset.id];if(!i)return;
+    tr.querySelector('.p-uc').textContent=u6(uc(i))+' / '+(UNITS[i.unit]||i.unit);
+    const d=tr.querySelector('.p-diff');
+    if(i.oldPrice==null||i.oldPrice===''){d.textContent='—';d.className='c num p-diff hint'}
+    else{const x=n(i.price)-n(i.oldPrice);d.textContent=(x>0?'+':'')+x.toFixed(3);d.className='c num p-diff '+(x>0.0005?'up':x<-0.0005?'down':'hint')}
+  });
+}
+
+// ---- orchestration ----
+function showTab(){
+  document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.tab===tab));
+  $('#view-sum').hidden=tab!=='sum'; $('#view-dishes').hidden=tab!=='dishes'; $('#view-prices').hidden=tab!=='prices'; $('#view-io').hidden=tab!=='io';
+  $('#brandBar').hidden=tab==='prices'||tab==='io';
+}
+function renderAll(){ if(!recs[selId]){const v=visibleRecs();selId=v[0]?v[0].id:null} setBanner(); renderChips(); renderSummary(); renderList(); renderDetail(); renderPrices(); showTab(); }
+function onData(){
+  if(!recs[selId]){const v=visibleRecs();selId=v[0]?v[0].id:null;confirmDel=false}
+  setBanner(); renderChips(); renderSummary(); renderList();
+  const ae=document.activeElement;
+  if($('#detail').contains(ae)&&isField(ae)) updateComputed(); else renderDetail();
+  if($('#priceBody').contains(ae)&&isField(ae)) updatePriceComputed(); else renderPrices();
+}
+const afterRecipeEdit=()=>{renderSummary();renderList();updateComputed()};
+
+// ---- events ----
+document.querySelector('.tabs').addEventListener('click',e=>{const t=e.target.closest('.tab');if(!t)return;tab=t.dataset.tab;showTab();if(tab==='prices')renderPrices();else if(tab==='dishes'){renderList();renderDetail()}else renderSummary()});
+$('#brandChips').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;brand=c.dataset.brand;const v=visibleRecs();if(!v.some(r=>r.id===selId)){selId=v[0]?v[0].id:null;confirmDel=false}renderChips();renderSummary();renderList();renderDetail()});
+$('#sumTable').addEventListener('click',e=>{const tr=e.target.closest('tr[data-id]');if(!tr)return;selId=tr.dataset.id;confirmDel=false;tab='dishes';showTab();renderList();renderDetail();window.scrollTo({top:0})});
+$('#dishList').addEventListener('click',e=>{const b=e.target.closest('.dish');if(!b)return;selId=b.dataset.id;confirmDel=false;renderList();renderDetail();if(window.matchMedia('(max-width:900px)').matches)$('#detail').scrollIntoView({block:'start'})});
+$('#newDish').addEventListener('click',()=>{
+  if(readOnly)return;
+  const id=uid('d');const maxO=Math.max(0,...Object.values(recs).map(r=>n(r.order)));
+  const tpl=Object.values(recs).find(r=>(r.sizes||[]).length);
+  const tplr=Object.values(recs).find(r=>(r.sizes||[]).length&&(brand==='all'||r.cat===brand))||tpl;
+  const sizes=tplr?clone(tplr.sizes).map(s=>Object.assign(s,{price:0,priceT:null})):[];
+  recs[id]={id,name:'New dish',brand:BRANDS[0],cat:brand!=='all'?brand:(tplr&&tplr.cat)||'egg',mode:tplr?tplr.mode||'mult':'mult',targetPct:30,order:maxO+1,lines:[],sizes};
+  selId=id;confirmDel=false;tab='dishes';showTab();queue('recipes',id);renderSummary();renderList();renderDetail();
+  const ni=$('#d-name');if(ni){ni.focus();ni.select()}
+});
+function setSizeField(s,f,v){ if(f==='name') s.name=v; else if(f==='container'||f==='bag') s[f]=v||null; else if(f==='priceT') s.priceT=v===''?null:n(v); else s[f]=n(v); }
+$('#detail').addEventListener('input',e=>{
+  const r=recs[selId];if(!r||readOnly)return;const t=e.target;
+  if(t.id==='d-name')r.name=t.value;
+  else if(t.id==='d-target')r.targetPct=n(t.value);
+  else if(t.classList.contains('l-qty'))r.lines[+t.dataset.i].qty=n(t.value);
+  else if(t.classList.contains('s-f')&&t.tagName==='INPUT')setSizeField(r.sizes[+t.dataset.j],t.dataset.f,t.value);
+  else return;
+  queue('recipes',r.id);afterRecipeEdit();
+});
+$('#detail').addEventListener('change',e=>{
+  const r=recs[selId];if(!r||readOnly)return;const t=e.target;
+  if(t.id==='d-brand'){r.brand=t.value;queue('recipes',r.id);renderSummary();renderList();return}
+  if(t.id==='d-cat'){r.cat=t.value;queue('recipes',r.id);renderSummary();renderList();return}
+  if(t.id==='d-mode'){r.mode=t.value;queue('recipes',r.id);renderDetail();afterRecipeEdit();return}
+  if(t.classList.contains('l-ing')){r.lines[+t.dataset.i].ingId=t.value;queue('recipes',r.id);renderDetail();renderSummary();renderList();return}
+  if(t.classList.contains('s-f')&&t.tagName==='SELECT'){setSizeField(r.sizes[+t.dataset.j],t.dataset.f,t.value);queue('recipes',r.id);afterRecipeEdit()}
+});
+$('#detail').addEventListener('click',e=>{
+  const r=recs[selId];if(!r)return;const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.goto){tab='prices';priceQ='';$('#priceQ').value='';flashId=t.dataset.goto;showTab();renderPrices();flashId=null;const inp=document.querySelector(`#priceBody tr[data-id="${t.dataset.goto}"] input[data-f="price"]`);if(inp){inp.scrollIntoView({block:'center'});inp.focus();inp.select()}return}
+  if(readOnly&&!['delNo'].includes(t.id))return;
+  if(t.id==='photoBtn'){$('#photoFile').click();return}
+  if(t.id==='photoDel'){if(!photoDelArm){photoDelArm=true;renderDetail();setTimeout(()=>{photoDelArm=false;if($('#photoDel'))renderDetail()},4000);return}
+    photoDelArm=false;const old=r.photo;delete r.photo;queue('recipes',r.id);renderDetail();renderList();if(old&&assetsNs){assetsNs.delete(old).catch(()=>{})}toast('Photo deleted.');return}
+  if(t.id==='addLine'){const first=sortedIngs().find(i=>i.cat!=='packaging');if(!first)return;r.lines=r.lines||[];r.lines.push({ingId:first.id,qty:0});queue('recipes',r.id);renderDetail();const q=document.querySelector(`#detail .l-ing[data-i="${r.lines.length-1}"]`);q&&q.focus()}
+  else if(t.classList.contains('l-del')){r.lines.splice(+t.dataset.i,1);queue('recipes',r.id);renderDetail();afterRecipeEdit()}
+  else if(t.id==='addSize'){r.sizes=r.sizes||[];const last=r.sizes[r.sizes.length-1];const pk=Object.values(ings).filter(i=>i.cat==='packaging');const sp=pk.find(i=>/spoon/i.test(i.name)),br=pk.find(i=>/bread/i.test(i.name));
+    r.sizes.push(last?Object.assign(clone(last),{name:'New size',price:0,priceT:null}):{name:'Regular',mult:1,price:0,priceT:null,other:0,container:null,spoonId:sp?sp.id:null,spoonQty:0,breadId:br?br.id:null,breadQty:0,bag:null});queue('recipes',r.id);renderDetail();afterRecipeEdit()}
+  else if(t.classList.contains('s-del')){r.sizes.splice(+t.dataset.j,1);queue('recipes',r.id);renderDetail();afterRecipeEdit()}
+  else if(t.id==='delDish'){confirmDel=true;renderDetail()}
+  else if(t.id==='delNo'){confirmDel=false;renderDetail()}
+  else if(t.id==='delYes'){const id=r.id;delete recs[id];remove('recipes',id);confirmDel=false;const v=visibleRecs();selId=v[0]?v[0].id:null;renderSummary();renderList();renderDetail();toast('Dish deleted.')}
+});
+$('#priceQ').addEventListener('input',e=>{priceQ=e.target.value;renderPrices()});
+$('#newIng').addEventListener('click',()=>{
+  if(readOnly)return;const id=uid('i');const maxO=Math.max(0,...Object.values(ings).map(i=>n(i.order)));
+  ings[id]={id,name:'New item',cat:'grocery',price:0,qty:1000,unit:'Gram',oldPrice:null,marketPrice:null,order:maxO+1};
+  priceQ='';$('#priceQ').value='';queue('ingredients',id);renderPrices();const inp=document.querySelector(`#priceBody tr[data-id="${id}"] input`);if(inp){inp.scrollIntoView({block:'center'});inp.focus();inp.select()}
+});
+$('#priceBody').addEventListener('input',e=>{
+  const tr=e.target.closest('tr[data-id]');if(!tr||readOnly)return;const i=ings[tr.dataset.id],f=e.target.dataset.f;if(!i||!f||e.target.tagName==='SELECT')return;
+  if(f==='name')i.name=e.target.value; else if(f==='oldPrice'||f==='marketPrice')i[f]=e.target.value===''?null:n(e.target.value); else i[f]=n(e.target.value);
+  queue('ingredients',i.id);updatePriceComputed();renderSummary();renderList();updateComputed();
+});
+$('#priceBody').addEventListener('change',e=>{
+  const tr=e.target.closest('tr[data-id]');if(!tr||readOnly)return;const i=ings[tr.dataset.id],f=e.target.dataset.f;
+  if(i&&(f==='unit'||f==='cat')){i[f]=e.target.value;queue('ingredients',i.id);renderPrices();renderSummary();renderList();renderDetail()}
+});
+$('#priceBody').addEventListener('click',e=>{
+  const b=e.target.closest('.p-del');if(!b||readOnly)return;const id=b.closest('tr').dataset.id;const u=usedIn(id);
+  if(u){toast(`This item cannot be deleted because it is used in ${u} dish(es). Remove it from those dishes first.`);return}
+  delete ings[id];remove('ingredients',id);renderPrices();
+});
+
+// ---- import / export ----
+let dl=null, pending=null; window.__dbg=()=>pending;
+const TYPO=[[/powdre/g,'powder'],[/corindre|corinder/g,'coriander'],[/coluor/g,'colour'],[/\bbena\b/g,'beans'],[/\bbens\b/g,'beans'],[/kuwaity/g,'kuwaiti'],[/\bmaji\b/g,'magi'],[/suger/g,'sugar'],[/chiily/g,'chilly'],[/brest/g,'breast'],[/chciken/g,'chicken'],[/souse/g,'sauce'],[/bagel/g,'bagal'],[/turmaric/g,'turmeric'],[/dall\b/g,'daal']];
+const normN=s=>{let t=String(s??'').toLowerCase().replace(/\s+/g,' ');TYPO.forEach(([a,b])=>{t=t.replace(a,b)});return t.replace(/[^a-z0-9\u0600-\u06ff]+/g,'')};
+const labelN=s=>String(s??'').toLowerCase().replace(/\s+/g,' ').trim();
+function lev(a,b){const m=a.length,n2=b.length;if(!m||!n2)return Math.max(m,n2);let p=Array.from({length:n2+1},(_,j)=>j);for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n2;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n2]}
+const sim=(a,b)=>{const x=normN(a),y=normN(b);if(!x||!y)return 0;return 1-lev(x,y)/Math.max(x.length,y.length)};
+const ALIAS={meat:'Qeema Meat',oil:'Vegetable Oil',oilvegtable:'Vegetable Oil',salsal:'Tomato Paste',tomatopestsalsal:'Tomato Paste',garkicfresh:'Garlic Peeled',garlic:'Garlic Peeled',cuminpowder:'Cummin Powder',mixmasala:'Mix Masala Powder',blacklemonpowder:'Black Lemone Powdre',tomatofresh:'Tomato',cupsicum:'Green Capiscum',cabage:'Cabbage White',garlicgingerpest:'Ginger + Garlic Mix',currypata:'Curry Leaves',turmaricpowder:'Turmeric Powder',corinderpowder:'Coriander Powder',tandowripowder:'Tandori Masala Powder',cinamonstike:'Cinamon Stick',blacklemonwhole:'Black Lemone Whole',oilgee:'Aseel Ghee',qeematsouse:'Date Syrup',qeematsauce:'Date Syrup',cheesesheder:'Cheddar Cheese',faslolya:'Baked Beans',onionred:'Onion'};
+function matchIng(name,minSim,skip){
+  const k=normN(name); const all=Object.values(ings).filter(i=>!skip||!skip.has(i.id));
+  let hit=all.find(i=>normN(i.name)===k); if(hit) return {ing:hit,how:'exact'};
+  if(ALIAS[k]){hit=all.find(i=>normN(i.name)===normN(ALIAS[k])); if(hit) return {ing:hit,how:'alias'}}
+  let best=null,bs=0; all.forEach(i=>{const s=sim(name,i.name);if(s>bs){bs=s;best=i}});
+  return bs>=(minSim||0.78)?{ing:best,how:'fuzzy',score:bs}:{ing:null,how:'none'};
+}
+const CAT_FROM=t=>{const k=normN(t);if(/veg|خضار/.test(k))return 'vegetable';if(/ben|bean|بقول/.test(k))return 'beans';if(/masala|spice|بهار/.test(k))return 'masala';if(/frozen|مجمد/.test(k))return 'frozen';if(/gros|groc|بقال/.test(k))return 'grocery';if(/pack|تغليف/.test(k))return 'packaging';return null};
+const UNIT_FROM=u=>{const k=String(u||'').trim().toLowerCase();return /^pc|^pic|حبة/.test(k)?'Pcs':/^ml|^ltr|^l$|مل|لتر/.test(k)?'Ml':'Gram'};
+const isPack=nm=>/spoon|contener|container|alluminium|^bag|bread/i.test(nm);
+
+function readBook(file){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>{try{res(XLSX.read(new Uint8Array(fr.result),{type:'array',cellFormula:true}))}catch(e){rej(e)}};fr.onerror=()=>rej(fr.error);fr.readAsArrayBuffer(file)})}
+const rowsOf=ws=>{const rows=[];for(const k in ws){if(k[0]==='!')continue;const a=XLSX.utils.decode_cell(k),c=ws[k];(rows[a.r]=rows[a.r]||[])[a.c]=c.t==='e'?null:(c.v===undefined?null:c.v)}for(let i=0;i<rows.length;i++){const r=rows[i]||[];rows[i]=Array.from({length:r.length},(_,j)=>r[j]===undefined?null:r[j])}return rows};
+
+// --- prices ---
+function priceSheets(wb){return wb.SheetNames.filter(sn=>parsePriceBook(wb,sn).length)}
+function parsePriceBook(wb,only){
+  const out=[];
+  wb.SheetNames.filter(sn=>!only||sn===only).forEach(sn=>{
+    const rows=rowsOf(wb.Sheets[sn]); let h=-1,col={};
+    for(let r=0;r<Math.min(rows.length,15)&&h<0;r++){const row=rows[r]||[];const ki=row.findIndex(v=>/^(items?|الصنف|item name)$/i.test(String(v??'').trim()));const kp=row.findIndex(v=>/^(price|السعر.*)$/i.test(String(v??'').trim()));if(ki>=0&&kp>=0){h=r;row.forEach((v,c)=>{const t=String(v??'').trim().toLowerCase();if(c===ki)col.name=c;else if(/^(price|السعر.*)$/.test(t)&&col.price==null)col.price=c;else if(/^(gram|qty|الكمية)$/.test(t))col.qty=c;else if(/^(unit|الوحدة)$/.test(t))col.unit=c;else if(/^(category|الفئة)$/.test(t))col.cat=c;else if(/^(old price|السعر السابق)$/.test(t))col.old=c;else if(/^(market|سعر السوق)$/.test(t))col.mkt=c})}}
+    if(h<0) return;
+    let sec=null; const hdrTxt=(rows[h-1]||[]).concat(rows[h]||[]).join(' '); if(/v\s*e\s*g/i.test(hdrTxt)) sec='vegetable';
+    for(let r=h+1;r<rows.length;r++){const row=rows[r]||[];const nm=row[col.name];
+      if(nm==null||String(nm).trim()===''){const t=row.find(v=>typeof v==='string'&&v.trim());const c=t&&CAT_FROM(t);if(c)sec=c;continue}
+      const price=+row[col.price]; if(!isFinite(price)) continue;
+      const name=String(nm).replace(/\s+/g,' ').trim();
+      const cat=(col.cat!=null&&(CATS.find(x=>x[1]===row[col.cat])||[])[0])||CAT_FROM(row[col.cat]||'')||(isPack(name)?'packaging':sec)||'grocery';
+      out.push({name,price,qty:+row[col.qty]||1,unit:UNIT_FROM(row[col.unit]),cat,mkt:col.mkt!=null&&isFinite(+row[col.mkt])&&row[col.mkt]!==null?+row[col.mkt]:null});
+    }
+  });
+  return out;
+}
+function planPrices(list){
+  const used=new Set();
+  return list.map((x,k)=>{const m=matchIng(x.name,0.72,used);let target=m.ing&&!used.has(m.ing.id)?m.ing.id:'__new';if(target!=='__new')used.add(target);
+    return {k,x,target,how:target==='__new'?'none':m.how}});
+}
+function renderPricePlan(){
+  const p=pending; const opts=sortedIngs().map(i=>`<option value="${esc(i.id)}">${esc(i.name)}</option>`).join('');
+  let ch=0,nw=0,same=0;
+  const rows=p.items.map(it=>{const cur=ings[it.target];const x=it.x;
+    let st,cls; if(it.target==='__skip'){st='Skip';cls='none'} else if(!cur){st='New item';cls='warn';nw++} else if(Math.abs(n(cur.price)-x.price)<1e-9&&n(cur.qty)===x.qty&&cur.unit===x.unit){st='No change';cls='none';same++} else {st='Update';cls='good';ch++}
+    const sel=(it.how!=='exact'||!cur)?`<select class="in imp-t" data-k="${it.k}" style="min-width:170px"><option value="__new"${it.target==='__new'?' selected':''}>+ Add as new item</option><option value="__skip"${it.target==='__skip'?' selected':''}>Skip</option>${opts.replace(`value="${esc(it.target)}"`,`value="${esc(it.target)}" selected`)}</select>`:esc(cur.name);
+    return `<tr><td>${esc(x.name)}</td><td>${sel}${it.how==='fuzzy'||it.how==='alias'?' <span class="pill warn">Close match</span>':''}</td><td class="c num">${cur?bhd(cur.price)+' / '+n(cur.qty):'—'}</td><td class="c num">${bhd(x.price)} / ${x.qty}</td><td><span class="pill ${cls}">${st}</span></td></tr>`}).join('');
+  const shSel=p.sheets.length>1?`<div class="field" style="max-width:320px"><label for="impSheet">Sheet to use (${p.sheets.length} price sheets)</label><select class="in" id="impSheet">${p.sheets.map(x=>`<option${x===p.sheet?' selected':''}>${esc(x)}</option>`).join('')}</select></div>`:'';
+  $('#impPreview').innerHTML=`${shSel}<div class="sec-h"><h3>Preview: ${p.items.length} items from sheet “${esc(p.sheet)}”</h3><span class="hint">${ch} updates · ${nw} new · ${same} unchanged</span></div>
+  <p class="note">Check rows marked “Close match” or “New” and pick the right item if needed. The current price is kept as “Previous price”.</p>
+  <div class="tbl-wrap"><table><thead><tr><th>Name in file</th><th>Matches in list</th><th class="c">Current</th><th class="c">New</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+  <div class="row-actions"><button class="btn" id="impApply"${dis()||(mode!=='live'?' disabled':'')}>Apply prices</button><button class="btn link" id="impCancel">Cancel</button></div>`;
+}
+async function applyPrices(){
+  const w=[]; let order=Math.max(0,...Object.values(ings).map(i=>n(i.order)));
+  pending.items.forEach(it=>{const x=it.x; if(it.target==='__skip')return;
+    if(it.target==='__new'){const id=uid('i');ings[id]={id,name:x.name,cat:x.cat,price:x.price,qty:x.qty,unit:x.unit,oldPrice:null,marketPrice:x.mkt,order:++order};w.push(['ingredients',id]);return}
+    const cur=ings[it.target]; if(!cur)return;
+    if(Math.abs(n(cur.price)-x.price)<1e-9&&n(cur.qty)===x.qty&&cur.unit===x.unit&&(x.mkt==null||x.mkt===cur.marketPrice))return;
+    if(Math.abs(n(cur.price)-x.price)>1e-9||n(cur.qty)!==x.qty) cur.oldPrice=cur.price;
+    Object.assign(cur,{price:x.price,qty:x.qty,unit:x.unit}); if(x.mkt!=null)cur.marketPrice=x.mkt; w.push(['ingredients',cur.id]);
+  });
+  await runWrites(w,`Updated ${w.length} items in the price list.`);
+}
+
+// --- recipes ---
+function parseDishSheet(ws,sn,refSpoon){
+  const rows=rowsOf(ws); const cell=(r,c)=>(rows[r]||[])[c]; const fml=(r,c)=>{const a=ws[XLSX.utils.encode_cell({r,c})];return a&&a.f?String(a.f):''};
+  let h=-1,qc=-1; for(let r=0;r<Math.min(rows.length,8)&&h<0;r++)(rows[r]||[]).forEach((v,c)=>{if(h<0&&/^qty$/i.test(String(v??'').trim())){h=r;qc=c}});
+  if(h<0) return null;
+  const lines=[],lab={};
+  for(let r=h+1;r<rows.length;r++){const a=cell(r,0),b=cell(r,1);
+    if(typeof b==='string'&&b.trim()&&(typeof a==='number'||a==null)&&!/^(total|price|sales|per|cost)/i.test(b.trim())){lines.push({name:b.replace(/\s+/g,' ').trim(),qty:typeof cell(r,qc)==='number'?cell(r,qc):0});continue}
+    const l=typeof a==='string'?a:typeof b==='string'?b:null; if(l){const k=labelN(l);(lab[k]=lab[k]||[]).push(r)}}
+  const row=p=>{for(const k in lab)if(k.startsWith(p))return lab[k][0];return -1};
+  const rc=row('contener no')>=0?row('contener no'):row('container no'); const rn=row('number of cont'); const rp=row('price');
+  if(rn<0||rp<0) return {name:sn,lines,sizes:[],mode:'div'};
+  const tr=[];for(const k in lab)if(k==='total'||k==='total cost')lab[k].forEach(r=>{if(r>rn)tr.push(r)});tr.sort((a,b)=>a-b);
+  const last=tr[tr.length-1]; let md='mult'; if(last!=null){const f=fml(last,3)||fml(last,4); if(f.includes('/'))md='div'; else if(!f.includes('*'))md='div'}
+  const sizes=[]; const pk=Object.values(ings).filter(i=>i.cat==='packaging');
+  const byN=re=>pk.find(i=>re.test(i.name)); const spoonI=byN(/spoon/i), breadI=byN(/^bread/i);
+  const bags=pk.filter(i=>/^bag/i.test(i.name));
+  for(let c=2;c<=6;c++){
+    const nn=cell(rn,c), pr=cell(rp,c); if(typeof nn!=='number'||nn<=0||typeof pr!=='number'||pr<=0) continue;
+    const cn=rc>=0?cell(rc,c):null; const g=p=>{const r=row(p);return r>=0?cell(r,c):null}; const gf=p=>{const r=row(p);return r>=0?fml(r,c):''};
+    let container=null, other=0;
+    if([1,3,4,5].includes(cn)){const it=pk.find(i=>normN(i.name)==='contenerno'+cn);container=it?it.id:null}
+    else {const it=byN(new RegExp('alluminium container '+['s','m','l'][sizes.length]||'x','i'));container=it?it.id:null;const cc=g('cost per cont');if(typeof cc==='number')other=cc}
+    const sv=g('spoon'), sfm=gf('spoon').match(/G\d+(?:\*(\d+(?:\.\d+)?))?/i);
+    const spoonQty=typeof sv==='number'&&sv>0?(sfm?+(sfm[1]||1):Math.round(sv/(refSpoon||uc(spoonI)||0.004)*1000)/1000):0;
+    let bv=g('braed'); if(bv==null)bv=g('bread'); const breadQty=typeof bv==='number'&&bv>0?Math.round(bv/(uc(breadI)||0.012)*1000)/1000:0;
+    const bgv=g('bag'); let bag=null; if(typeof bgv==='number'&&bgv>0){let b=null,d=1e9;bags.forEach(x=>{const dd=Math.abs(uc(x)-bgv);if(dd<d){d=dd;b=x}});bag=b?b.id:null}
+    const nm={1:'Single',3:'Small',4:'Medium',5:'Large'}[cn]||['Small','Medium','Large','Size 4'][sizes.length];
+    sizes.push({name:nm,mult:nn,price:pr,container,spoonId:spoonI?spoonI.id:null,spoonQty,breadId:breadI?breadI.id:null,breadQty,bag,other:Math.round(other*10000)/10000});
+  }
+  const t=String(cell(0,0)||sn).replace(/\s+\d{1,2}\.\d{1,2}\.\d{2,4}.*$/,'').replace(/-.*$/,'').trim();
+  return {name:t||sn,sheet:sn,lines,sizes,mode:md};
+}
+function parseFlat(wb){
+  const R=rowsOf(wb.Sheets['Recipes']), S=wb.Sheets['Sizes']?rowsOf(wb.Sheets['Sizes']):[];
+  const hi=R[0].map(v=>String(v||'').trim()); const ix=k=>hi.indexOf(k);
+  const by={};
+  R.slice(1).forEach(r=>{const d=r[ix('Dish')];if(!d)return;const o=by[d]=by[d]||{name:d,cat:(RCATS.find(x=>x[1]===r[ix('Category')])||[])[0],mode:r[ix('Mode')]==='mult'?'mult':'div',target:+r[ix('Target %')]||30,lines:[],sizes:[]};if(r[ix('Ingredient')])o.lines.push({name:String(r[ix('Ingredient')]).trim(),qty:+r[ix('Qty')]||0})});
+  if(S.length){const hs=S[0].map(v=>String(v||'').trim());const j=k=>hs.indexOf(k);
+    S.slice(1).forEach(r=>{const d=by[r[j('Dish')]];if(!d)return;const f=nm=>{if(!nm)return null;const m=matchIng(nm,0.9);return m.ing?m.ing.id:null};const pk=Object.values(ings);
+      d.sizes.push({name:r[j('Size')]||'',mult:+r[j('Containers / Multiplier')]||1,container:f(r[j('Container')]),spoonId:(pk.find(i=>/spoon/i.test(i.name))||{}).id||null,spoonQty:+r[j('Spoons')]||0,breadId:(pk.find(i=>/^bread/i.test(i.name))||{}).id||null,breadQty:+r[j('Bread')]||0,bag:f(r[j('Bag')]),other:+r[j('Other')]||0,price:+r[j('Store price')]||0,priceT:r[j('Delivery price')]===''||r[j('Delivery price')]==null?null:+r[j('Delivery price')]})})}
+  return Object.values(by);
+}
+function matchRecipe(name,sheet){
+  const all=Object.values(recs); const slug=String(sheet||name).trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  return all.find(r=>r.id===slug)||all.find(r=>normN(r.name)===normN(name))||(()=>{let b=null,s=0;all.forEach(r=>{const x=sim(r.name,name);if(x>s){s=x;b=r}});return s>=0.8?b:null})();
+}
+async function planRecipes(wb,delivery){
+  let dishes;
+  if(wb.SheetNames.includes('Recipes')) dishes=parseFlat(wb);
+  else { let ref=null; if(wb.Sheets['LIST']){rowsOf(wb.Sheets['LIST']).forEach(r=>{if(r&&/^spoon$/i.test(String(r[2]||'').trim())&&typeof r[6]==='number')ref=r[6]})}
+    dishes=wb.SheetNames.filter(s=>!/^(list|sheet\d*|menu|summary|الملخص)$/i.test(s.trim())).map(s=>parseDishSheet(wb.Sheets[s],s.trim(),ref)).filter(d=>d&&d.lines.length); }
+  return dishes.map((d,k)=>{const ex=matchRecipe(d.name,d.sheet);const lines=d.lines.map(l=>{const m=matchIng(l.name);return {name:l.name,qty:l.qty,ingId:m.ing?m.ing.id:null,how:m.how}});
+    return {k,d,ex:ex?ex.id:null,target:ex?ex.id:'__new',lines,delivery}});
+}
+function recipeFrom(p){
+  const d=p.d, ex=recs[p.target];
+  const lines=p.lines.map(l=>({ingId:l.ingId,qty:l.qty}));
+  if(p.delivery&&ex){const sizes=clone(ex.sizes||[]);d.sizes.forEach(s=>{const t=sizes.find(x=>x.name===s.name);if(t)t.priceT=s.price});return Object.assign(clone(ex),{sizes})}
+  const sizes=d.sizes.map(s=>{const old=ex&&(ex.sizes||[]).find(x=>x.name===s.name);return Object.assign({},s,{priceT:s.priceT!==undefined?s.priceT:old?old.priceT??null:null})});
+  const base=ex?clone(ex):{name:d.name,brand:BRANDS[0],cat:d.cat||$('#impCat').value,targetPct:d.target||30,order:Math.max(0,...Object.values(recs).map(r=>n(r.order)))+1};
+  return Object.assign(base,{lines,sizes,mode:d.mode||'div'},d.cat?{cat:d.cat}:{},d.target?{targetPct:d.target}:{});
+}
+function renderRecipePlan(){
+  const p=pending; const ropts=sortedRecs().map(r=>`<option value="${esc(r.id)}">${esc(r.name)}</option>`).join('');
+  const rows=p.items.map(it=>{const miss=it.lines.filter(l=>!l.ingId).map(l=>l.name);const fz=it.lines.filter(l=>l.how==='fuzzy'||l.how==='alias').map(l=>`${l.name} ← ${ings[l.ingId].name}`);
+    const sel=`<select class="in imp-r" data-k="${it.k}" style="min-width:160px"><option value="__new"${it.target==='__new'?' selected':''}>+ New dish</option><option value="__skip"${it.target==='__skip'?' selected':''}>Skip</option>${ropts.replace(`value="${esc(it.target)}"`,`value="${esc(it.target)}" selected`)}</select>`;
+    const sz=it.d.sizes.map(s=>`${esc(s.name)} ${bhd(s.price)}`).join(' · ')||'<span class="hint">No sizes</span>';
+    return `<tr><td><b>${esc(it.d.name)}</b><div class="hint">${it.delivery?'Delivery prices: ':''}${sz}</div></td><td>${sel}</td><td class="c num">${it.lines.length}</td><td>${miss.length?`<span class="pill bad">Not found: ${miss.map(esc).join(', ')}</span> `:''}${fz.length?`<span class="pill warn" title="${esc(fz.join(' | '))}">${fz.length} Close match</span>`:''}${!miss.length&&!fz.length?'<span class="pill good">All items matched</span>':''}</td></tr>`}).join('');
+  $('#impPreview').innerHTML=`<div class="sec-h"><h3>Preview: ${p.items.length} dishes in file</h3><span class="hint">${p.delivery?'Only delivery prices will be updated':'Ingredients and sizes of matched dishes will be replaced'}</span></div>
+  <p class="note">Items not found are added to the price list at zero so you can price them later. Hover “Close match” to see the names.</p>
+  <div class="tbl-wrap"><table><thead><tr><th>Dish in file</th><th>Matches in app</th><th class="c">Items</th><th>Notes</th></tr></thead><tbody>${rows}</tbody></table></div>
+  <div class="row-actions"><button class="btn" id="impApply"${dis()||(mode!=='live'?' disabled':'')}>Apply recipes</button><button class="btn link" id="impCancel">Cancel</button></div>`;
+}
+async function applyRecipes(){
+  const w=[]; let order=Math.max(0,...Object.values(ings).map(i=>n(i.order)));
+  pending.items.forEach(it=>{if(it.target==='__skip')return; if(it.delivery&&it.target==='__new')return;
+    if(!it.delivery) it.lines.forEach(l=>{if(!l.ingId){const hit=Object.values(ings).find(i=>normN(i.name)===normN(l.name));if(hit){l.ingId=hit.id;return}const id=uid('i');ings[id]={id,name:l.name,cat:'grocery',price:0,qty:1000,unit:'Gram',oldPrice:null,marketPrice:null,order:++order};l.ingId=id;w.push(['ingredients',id])}});
+    const r=recipeFrom(it); const id=it.target==='__new'?uid('d'):it.target; r.id=id; recs[id]=r; w.push(['recipes',id]);
+  });
+  await runWrites(w,`Saved ${w.filter(x=>x[0]==='recipes').length} dishes.`);
+}
+
+async function runWrites(list,msg){
+  const btn=$('#impApply'); if(btn){btn.disabled=true;btn.textContent='Saving…'}
+  let done=0,fail=0;
+  for(const [coll,id] of list){
+    const o=(coll==='recipes'?recs:ings)[id]; if(!o)continue; const body=clone(o); delete body.id;
+    for(let t=0;t<4;t++){try{await db.collection(coll).doc(id).set(body);done++;break}catch(e){if(e&&(e.code==='resource_exhausted'||e.code==='unavailable')&&t<3){await new Promise(r=>setTimeout(r,800*(t+1)));continue}fail++;if(e&&e.code==='invalid_argument'){readOnly=true}break}}
+    if(btn)btn.textContent=`Saving… ${done}/${list.length}`;
+  }
+  pending=null; $('#impPreview').innerHTML=''; $('#impFile').value='';
+  toast(fail?`Saved ${done}, failed ${fail}. Try again for the rest.`:msg);
+  renderAll();
+}
+
+// --- export ---
+function priceBook(){
+  const rows=[['Sn','Items','Price','Gram','Unit','Gram Price','Category','Old price','Market']]; let sn=0;
+  CATS.forEach(([k,t])=>{const items=sortedIngs().filter(i=>i.cat===k);if(!items.length)return;rows.push([t]);items.forEach(i=>rows.push([++sn,i.name,n(i.price),n(i.qty),i.unit,+uc(i).toFixed(6),t,i.oldPrice??'',i.marketPrice??'']))});
+  const ws=XLSX.utils.aoa_to_sheet(rows); ws['!cols']=[{wch:5},{wch:26},{wch:9},{wch:8},{wch:7},{wch:11},{wch:16},{wch:10},{wch:9}];
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'LIST'); return wb;
+}
+function recipeBook(){
+  const wb=XLSX.utils.book_new(); const rs=sortedRecs().filter(r=>(r.lines||[]).length||(r.sizes||[]).length); const names=sizeNames(rs);
+  const catT=c=>(RCATS.find(x=>x[0]===c)||[,''])[1];
+  const sum=[['Dish','Category',...names.flatMap(s=>[s+' cost',s+' store price',s+' store %',s+' delivery price',s+' delivery %'])]];
+  rs.forEach(r=>{const c=calcAll(r);sum.push([r.name,catT(r.cat),...names.flatMap(nm=>{const i=(r.sizes||[]).findIndex(s=>s.name===nm);if(i<0)return ['','','','',''];const s=c.sizes[i];return [+s.total.toFixed(3),s.price,s.pct==null?'':+(s.pct/100).toFixed(4),s.priceT??'',s.pctT==null?'':+(s.pctT/100).toFixed(4)]})])});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sum),'Summary');
+  const R=[['Dish','Category','Mode','Target %','Ingredient','Qty','Unit','Unit price','Cost']];
+  rs.forEach(r=>(r.lines||[]).forEach(l=>{const i=ings[l.ingId];R.push([r.name,catT(r.cat),r.mode||'mult',n(r.targetPct)||30,i?i.name:'',n(l.qty),i?i.unit:'',i?+uc(i).toFixed(6):'',+lineCost(l).toFixed(4)])}));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(R),'Recipes');
+  const S=[['Dish','Size','Containers / Multiplier','Container','Spoons','Bread','Bag','Other','Store price','Delivery price','Total cost']];
+  rs.forEach(r=>{const c=calcAll(r);(r.sizes||[]).forEach((s,j)=>S.push([r.name,s.name,n(s.mult),(ings[s.container]||{}).name||'',n(s.spoonQty),n(s.breadQty),(ings[s.bag]||{}).name||'',n(s.other),n(s.price),s.priceT??'',+c.sizes[j].total.toFixed(3)]))});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(S),'Sizes');
+  const usedN=new Set(wb.SheetNames);
+  rs.forEach(r=>{const c=calcAll(r);const a=[[r.name],[],['#','Ingredients','Qty','Unit','Unit cost','Cost']];
+    (r.lines||[]).forEach((l,k)=>{const i=ings[l.ingId];a.push([k+1,i?i.name:'?',n(l.qty),i?i.unit:'',i?+uc(i).toFixed(6):'',+lineCost(l).toFixed(4)])});
+    a.push(['','TOTAL COST','','','',+c.base.toFixed(4)],[]);
+    const sz=r.sizes||[]; a.push(['',r.mode==='div'?'Containers per recipe':'Recipes per container',...sz.map(s=>n(s.mult))]);
+    a.push(['','Size',...sz.map(s=>s.name)],['','Food cost',...c.sizes.map(s=>+s.food.toFixed(4))],['','Packaging',...c.sizes.map(s=>+s.pack.toFixed(4))],['','TOTAL',...c.sizes.map(s=>+s.total.toFixed(4))],['','Store price',...c.sizes.map(s=>s.price)],['','Store %',...c.sizes.map(s=>s.pct==null?'':+(s.pct/100).toFixed(4))],['','Delivery price',...c.sizes.map(s=>s.priceT??'')],['','Delivery %',...c.sizes.map(s=>s.pctT==null?'':+(s.pctT/100).toFixed(4))]);
+    let nm=r.name.replace(/[\\\/\?\*\[\]:]/g,' ').slice(0,31).trim()||'Dish'; let k=2; while(usedN.has(nm)){nm=nm.slice(0,28)+' '+k++} usedN.add(nm);
+    const ws=XLSX.utils.aoa_to_sheet(a); ws['!cols']=[{wch:4},{wch:26},{wch:10},{wch:10},{wch:10},{wch:10}]; XLSX.utils.book_append_sheet(wb,ws,nm)});
+  return wb;
+}
+async function saveBook(wb,filename){
+  if(typeof XLSX==='undefined'){toast('The Excel library did not load. Reload the page.');return}
+  if(!dl){toast('Downloads are not available in this view.');return}
+  const buf=XLSX.write(wb,{type:'array',bookType:'xlsx'});
+  try{await dl.save({filename,data:new Blob([buf])});toast('Downloaded.')}catch(e){if(e&&e.code==='declined')return;toast(e&&e.code==='rate_limited'?'A download prompt is already open.':'Could not download.')}
+}
+const today=()=>new Date().toISOString().slice(0,10);
+$('#expPrices').addEventListener('click',()=>saveBook(priceBook(),`price-list-${today()}.xlsx`));
+$('#expRecipes').addEventListener('click',()=>saveBook(recipeBook(),`recipes-and-costs-${today()}.xlsx`));
+$('#impKind').addEventListener('change',e=>{$('#impDeliveryWrap').hidden=e.target.value!=='recipes';$('#impCatWrap').hidden=e.target.value!=='recipes'});
+$('#impFile').addEventListener('change',async e=>{
+  const f=e.target.files&&e.target.files[0]; if(!f)return;
+  if(typeof XLSX==='undefined'){toast('The Excel library did not load. Reload the page.');return}
+  $('#impPreview').innerHTML='<p class="hint">Reading file…</p>';
+  try{const wb=await readBook(f);
+    if($('#impKind').value==='prices'){const sheets=priceSheets(wb);const sheet=sheets[0];const list=sheet?parsePriceBook(wb,sheet):[];if(!list.length){$('#impPreview').innerHTML='<div class="banner warn">No price table found. The file needs Items and Price columns.</div>';return}
+      pending={kind:'prices',wb,sheets,sheet,items:planPrices(list)};renderPricePlan()}
+    else {const delivery=$('#impDelivery').checked;const items=await planRecipes(wb,delivery);if(!items.length){$('#impPreview').innerHTML='<div class="banner warn">No recipes found. Each recipe sheet needs a Qty column, or use the recipe file downloaded from here.</div>';return}
+      pending={kind:'recipes',delivery,items};renderRecipePlan()}
+  }catch(err){$('#impPreview').innerHTML=`<div class="banner warn">Could not read the file. Make sure it is an Excel (.xlsx) file.</div>`}
+});
+$('#impPreview').addEventListener('change',e=>{const t=e.target;if(!pending)return;
+  if(t.id==='impSheet'){pending.sheet=t.value;pending.items=planPrices(parsePriceBook(pending.wb,t.value));renderPricePlan();return}
+  if(t.classList.contains('imp-t')){pending.items[+t.dataset.k].target=t.value;pending.items[+t.dataset.k].how=t.value.startsWith('__')?'none':'manual';renderPricePlan()}
+  if(t.classList.contains('imp-r')){pending.items[+t.dataset.k].target=t.value;renderRecipePlan()}});
+$('#impPreview').addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
+  if(t.id==='impCancel'){pending=null;$('#impPreview').innerHTML='';$('#impFile').value=''}
+  if(t.id==='impApply'&&pending&&mode==='live'&&!readOnly){pending.kind==='prices'?applyPrices():applyRecipes()}});
+(async()=>{try{dl=window.claude&&window.claude.use?await window.claude.use('downloads'):null}catch(e){dl=null}
+  $('#expNote').hidden=!!dl; $('#expPrices').disabled=!dl; $('#expRecipes').disabled=!dl;})();
+
+$('#impCat').innerHTML=RCATS.map(([k,t])=>`<option value="${k}">${t}</option>`).join('');
+$('#photoFile').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(f)uploadPhoto(f)});
+// ---- boot ----
+loadSeed(); renderAll();
+(async function(){
+  let d=null;
+  try{ d=(window.claude&&window.claude.use)?await window.claude.use('db'):null; }catch(e){ d=null; }
+  if(!d){ mode='demo'; renderAll(); return; }
+  db=d;
+  const done=()=>{ if(loaded.i&&loaded.r){ if(mode!=='live'){mode='live';} onData(); } };
+  const err=e=>{ if(e&&(e.code==='revoked'||e.code==='not_granted')){readOnly=true;renderAll()} else toast('Live updates stopped. Reload the page.'); };
+  db.collection('ingredients').onSnapshot(s=>{mergeSnap('ingredients',s);loaded.i=true;done()},err);
+  db.collection('recipes').onSnapshot(s=>{mergeSnap('recipes',s);loaded.r=true;done()},err);
+  try{ assetsNs=await window.claude.use('assets'); if(assetsNs) renderDetail(); }catch(e){ assetsNs=null; }
+  try{ const u=await window.claude.use('user'); if(u&&u.can){ const w=await u.can('data.write'); if(w===false){readOnly=true;renderAll()} } }catch(e){}
+})();
+})();
+</script>
+</body></html>
