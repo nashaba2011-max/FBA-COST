@@ -67,6 +67,11 @@ button{cursor:pointer}
 .list{display:flex;flex-direction:column;gap:6px}
 .dish .pills .hint{min-width:38px;font-size:11px}
 .dish-head{display:flex;align-items:center;gap:10px}
+.ithumb{width:34px;height:34px;border-radius:6px;object-fit:cover;display:block;background:var(--sunk)}
+.ip{display:flex;align-items:center;gap:2px}
+.ip-img{border:0;padding:0;background:none;border-radius:6px;cursor:pointer}
+.lcell{display:flex;align-items:center}
+.lthumb{width:26px;height:26px;border-radius:5px;object-fit:cover;vertical-align:middle;margin-inline-end:6px}
 .thumb{width:40px;height:40px;border-radius:8px;object-fit:cover;flex:none;background:var(--sunk)}
 .photo{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
 .photo img,.photo .ph{width:220px;max-width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;border:1px solid var(--line);background:var(--sunk)}
@@ -178,6 +183,7 @@ th.szh.sz0{color:var(--sz0-ink);border-top-color:var(--sz0-ink)} th.szh.sz1{colo
       <div class="list" id="dishList"></div>
       <div class="panel" id="detail"></div>
       <input type="file" id="photoFile" accept="image/*" hidden>
+      <input type="file" id="itemPhotoFile" accept="image/*" hidden>
     </div>
   </section>
 
@@ -193,7 +199,7 @@ th.szh.sz0{color:var(--sz0-ink);border-top-color:var(--sz0-ink)} th.szh.sz1{colo
     <div class="tbl-wrap">
       <table id="priceTable">
         <thead><tr>
-          <th>#</th><th>Item</th><th>Category</th><th class="c">Price (BHD)</th><th class="c">Qty</th><th>Unit</th><th class="c">Unit price</th><th class="c">Previous price</th><th class="c">Change</th><th class="c">Market price</th><th>Used in</th><th></th>
+          <th>#</th><th>Photo</th><th>Item</th><th>Category</th><th class="c">Price (BHD)</th><th class="c">Qty</th><th>Unit</th><th class="c">Unit price</th><th class="c">Previous price</th><th class="c">Change</th><th class="c">Market price</th><th>Used in</th><th></th>
         </tr></thead>
         <tbody id="priceBody"></tbody>
       </table>
@@ -310,7 +316,7 @@ function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTi
 function setBanner(){
   const b=$('#banner');
   if(mode==='loading'){b.className='banner';b.textContent='Loading data…';return}
-  if(mode==='demo'){b.className='banner warn';b.textContent='Offline copy with the data as of 27 Sep 2026. You can browse and try changes, but nothing is saved.';return}
+  if(mode==='demo'){b.className='banner warn';b.textContent='Offline copy with the data as of 28 Sep 2026. You can browse, download Excel and try changes, but nothing is saved.';return}
   if(readOnly){b.className='banner warn';b.textContent='Read-only: you can view costs but not edit them.';return}
   b.className='banner';b.textContent='Data is shared with your team and saves automatically. Prices exclude VAT.';
 }
@@ -379,6 +385,21 @@ function photoBlock(r){
   return `<div class="photo">${img}${acts}</div>`;
 }
 function shrink(file){return new Promise(res=>{const img=new Image();const u=URL.createObjectURL(file);img.onload=()=>{const k=Math.min(1,1200/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(b=>res(b||file),'image/jpeg',0.85)};img.onerror=()=>{URL.revokeObjectURL(u);res(file)};img.src=u})}
+let itemPhotoTarget=null, ipDelArm=null, ipBusy=null;
+function itemPhotoCell(i){
+  const can=!!assetsNs&&!readOnly&&mode==='live';
+  if(ipBusy===i.id) return '<span class="hint">Uploading…</span>';
+  const img=i.photo?`<img class="ithumb" src="/_blob/${esc(i.photo)}" alt="${esc(i.name)}" loading="lazy">`:'';
+  if(!can) return img||'<span class="hint">—</span>';
+  return `<span class="ip">${img?`<button class="ip-btn ip-img" title="Change photo">${img}</button>`:`<button class="btn link sm ip-btn" title="Upload photo">+ Photo</button>`}${i.photo?`<button class="x ip-del" title="Delete photo">${ipDelArm===i.id?'✓?':'×'}</button>`:''}</span>`;
+}
+async function uploadItemPhoto(file){
+  const id=itemPhotoTarget, i=ings[id]; if(!i||!assetsNs) return;
+  ipBusy=id; renderPrices();
+  try{ const blob=await shrink(file); const res=await assetsNs.upload(blob,{type:blob.type||'image/jpeg'}); const old=i.photo; i.photo=res.id; queue('ingredients',id); if(old){try{await assetsNs.delete(old)}catch(e){}} toast('Photo saved.'); }
+  catch(e){ toast(e&&e.code==='too_large'?'The photo is too large.':e&&e.code==='quota_exceeded'?'Photo storage is full.':'Could not upload the photo.'); }
+  ipBusy=null; $('#itemPhotoFile').value=''; renderPrices(); renderDetail();
+}
 async function uploadPhoto(file){
   const r=recs[selId]; if(!r||!assetsNs) return;
   photoBusy=true; renderDetail();
@@ -395,7 +416,7 @@ function renderDetail(){
   const orphan=lines.map((l,i)=>i).filter(i=>!ings[lines[i].ingId]); if(orphan.length) groups.push({t:'Items deleted from the list',idx:orphan});
   const lineRow=i=>{const l=lines[i],ing=ings[l.ingId];sn++;return `<tr>
     <td class="sn num">${sn}</td>
-    <td><select class="in l-ing" data-i="${i}" aria-label="Item"${dis()}>${ingOptions(l.ingId)}</select></td>
+    <td><div class="lcell">${ing&&ing.photo?`<img class="lthumb" src="/_blob/${esc(ing.photo)}" alt="" loading="lazy">`:''}<select class="in l-ing" data-i="${i}" aria-label="Item"${dis()}>${ingOptions(l.ingId)}</select></div></td>
     <td class="c"><input class="in l-qty" type="number" min="0" step="any" data-i="${i}" value="${n(l.qty)}" style="width:86px" aria-label="Qty"${dis()}></td>
     <td class="unit">${ing?UNITS[ing.unit]||ing.unit:''}</td>
     <td class="c">${ing?`<button class="goto num" data-goto="${esc(ing.id)}" title="Edit the price in the price list">${u6(uc(ing))}</button>`:''}</td>
@@ -471,8 +492,9 @@ function renderPrices(){
   const rows=sortedIngs().filter(i=>!q||String(i.name).toLowerCase().includes(q));
   let sn=0;
   $('#priceBody').innerHTML=CATS.map(([k,t])=>{const items=rows.filter(i=>i.cat===k);if(!items.length)return '';
-    return `<tr class="cat"><td colspan="12">${t}</td></tr>`+items.map(i=>{sn++;const u=usedIn(i.id);return `<tr data-id="${esc(i.id)}"${i.id===flashId?' class="flash"':''}>
+    return `<tr class="cat"><td colspan="13">${t}</td></tr>`+items.map(i=>{sn++;const u=usedIn(i.id);return `<tr data-id="${esc(i.id)}"${i.id===flashId?' class="flash"':''}>
       <td class="sn num">${sn}</td>
+      <td>${itemPhotoCell(i)}</td>
       <td class="nm"><input class="in" data-f="name" value="${esc(i.name)}" aria-label="Item name"${dis()}>${n(i.price)>0?'':' <span class="pill bad">No price</span>'}</td>
       <td><select class="in" data-f="cat" aria-label="Category"${dis()}>${CATS.map(([ck,ct])=>`<option value="${ck}"${ck===i.cat?' selected':''}>${ct}</option>`).join('')}</select></td>
       <td class="c"><input class="in" type="number" min="0" step="0.001" data-f="price" value="${n(i.price)}" aria-label="Price"${dis()}></td>
@@ -483,7 +505,7 @@ function renderPrices(){
       <td class="c num p-diff"></td>
       <td class="c"><input class="in" type="number" min="0" step="0.001" data-f="marketPrice" value="${i.marketPrice==null?'':n(i.marketPrice)}" aria-label="Market price"${dis()}></td>
       <td class="hint">${u?u+(u===1?' dish':' dishes'):'—'}</td>
-      <td><button class="x p-del" aria-label="Delete item"${dis()}>×</button></td></tr>`}).join('')}).join('')||`<tr><td colspan="12" class="hint" style="padding:14px">No results.</td></tr>`;
+      <td><button class="x p-del" aria-label="Delete item"${dis()}>×</button></td></tr>`}).join('')}).join('')||`<tr><td colspan="13" class="hint" style="padding:14px">No results.</td></tr>`;
   updatePriceComputed();
 }
 function updatePriceComputed(){
@@ -576,6 +598,9 @@ $('#priceBody').addEventListener('change',e=>{
   if(i&&(f==='unit'||f==='cat')){i[f]=e.target.value;queue('ingredients',i.id);renderPrices();renderSummary();renderList();renderDetail()}
 });
 $('#priceBody').addEventListener('click',e=>{
+  const ph=e.target.closest('.ip-btn');if(ph&&!readOnly&&assetsNs){itemPhotoTarget=ph.closest('tr').dataset.id;$('#itemPhotoFile').click();return}
+  const pd=e.target.closest('.ip-del');if(pd&&!readOnly&&assetsNs){const id=pd.closest('tr').dataset.id;if(ipDelArm!==id){ipDelArm=id;renderPrices();setTimeout(()=>{if(ipDelArm===id){ipDelArm=null;renderPrices()}},4000);return}
+    ipDelArm=null;const i=ings[id];const old=i&&i.photo;if(i){delete i.photo;queue('ingredients',id);renderPrices();if(old)assetsNs.delete(old).catch(()=>{});toast('Photo deleted.')}return}
   const b=e.target.closest('.p-del');if(!b||readOnly)return;const id=b.closest('tr').dataset.id;const u=usedIn(id);
   if(u){toast(`This item cannot be deleted because it is used in ${u} dish(es). Remove it from those dishes first.`);return}
   delete ings[id];remove('ingredients',id);renderPrices();
@@ -806,10 +831,13 @@ $('#impPreview').addEventListener('click',e=>{const t=e.target.closest('button')
   if(t.id==='impCancel'){pending=null;$('#impPreview').innerHTML='';$('#impFile').value=''}
   if(t.id==='impApply'&&pending&&mode==='live'&&!readOnly){pending.kind==='prices'?applyPrices():applyRecipes()}});
 (async()=>{try{dl=window.claude&&window.claude.use?await window.claude.use('downloads'):null}catch(e){dl=null}
+  // Outside Claude (e.g. GitHub Pages) the browser can save files directly.
+  if(!dl&&!(window.claude&&window.claude.use)) dl={save:async({filename,data})=>{const u=URL.createObjectURL(data instanceof Blob?data:new Blob([data]));const a=document.createElement('a');a.href=u;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);return {status:'saved'}}};
   $('#expNote').hidden=!!dl; $('#expPrices').disabled=!dl; $('#expRecipes').disabled=!dl;})();
 
 $('#impCat').innerHTML=RCATS.map(([k,t])=>`<option value="${k}">${t}</option>`).join('');
 $('#photoFile').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(f)uploadPhoto(f)});
+$('#itemPhotoFile').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(f)uploadItemPhoto(f)});
 // ---- boot ----
 loadSeed(); renderAll();
 (async function(){
@@ -821,7 +849,7 @@ loadSeed(); renderAll();
   const err=e=>{ if(e&&(e.code==='revoked'||e.code==='not_granted')){readOnly=true;renderAll()} else toast('Live updates stopped. Reload the page.'); };
   db.collection('ingredients').onSnapshot(s=>{mergeSnap('ingredients',s);loaded.i=true;done()},err);
   db.collection('recipes').onSnapshot(s=>{mergeSnap('recipes',s);loaded.r=true;done()},err);
-  try{ assetsNs=await window.claude.use('assets'); if(assetsNs) renderDetail(); }catch(e){ assetsNs=null; }
+  try{ assetsNs=await window.claude.use('assets'); if(assetsNs){ renderDetail(); renderPrices(); } }catch(e){ assetsNs=null; }
   try{ const u=await window.claude.use('user'); if(u&&u.can){ const w=await u.can('data.write'); if(w===false){readOnly=true;renderAll()} } }catch(e){}
 })();
 })();
